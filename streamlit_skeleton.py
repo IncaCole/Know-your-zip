@@ -360,6 +360,17 @@ def create_interactive_map(user_location, search_input, hospitals_df, schools_df
     # Display the map in Streamlit
     components.html(map_html, height=600)
 
+def show_toast(message, type="success"):
+    """Display a toast notification with custom styling"""
+    if type == "success":
+        st.toast(message, icon="✅")
+    elif type == "error":
+        st.toast(message, icon="❌")
+    elif type == "info":
+        st.toast(message, icon="ℹ️")
+    elif type == "warning":
+        st.toast(message, icon="⚠️")
+
 # Create tabs with icons
 tab1, tab2, tab3, tab4 = st.tabs(["🏠 Home", "🗺️ Map", "ℹ️ About", "📞 Contact"])
 
@@ -409,7 +420,7 @@ with tab1:
         if search_button and search_input:
             if search_type == "ZIP Code":
                 if search_input.isdigit() and len(search_input) == 5:
-                    st.success(f"Searching for ZIP code: {search_input}")
+                    show_toast(f"Searching for ZIP code: {search_input}", "info")
                     
                     # Show loading spinner while fetching data
                     with st.spinner("Loading data..."):
@@ -417,6 +428,7 @@ with tab1:
                         user_location = get_coordinates(search_input)
                     
                     if user_location:
+                        show_toast("Location found successfully!", "success")
                         # Fetch all data first
                         with st.spinner("Loading statistics..."):
                             hospitals_df = get_nearby_locations(user_location, 'hospitals')
@@ -438,14 +450,16 @@ with tab1:
                         
                         # Switch to the Map tab
                         st.experimental_set_query_params(tab="Map")
+                    else:
+                        show_toast("Could not find location. Please try again.", "error")
                 else:
-                    st.error("Please enter a valid 5-digit ZIP code")
+                    show_toast("Please enter a valid 5-digit ZIP code", "error")
             else:
-                st.success(f"Searching for address: {search_input}")
+                show_toast(f"Searching for address: {search_input}", "info")
                 # Similar structure for full address search
                 # ... (will add this in next edit)
         elif search_button and not search_input:
-            st.warning("Please enter a search term before clicking SEARCH")
+            show_toast("Please enter a search term before clicking SEARCH", "warning")
             
     with col2:
         st.subheader("📊 Quick Stats")
@@ -538,7 +552,10 @@ with tab4:
         message = st.text_area("Message", placeholder="Your message here...", height=150)
         submitted = st.form_submit_button("Send Message")
         if submitted:
-            st.success("Thank you for your message! We'll get back to you soon.")
+            if name and email and message:
+                show_toast("Thank you for your message! We'll get back to you soon.", "success")
+            else:
+                show_toast("Please fill in all fields", "warning")
     
     st.markdown('</div>', unsafe_allow_html=True)
 
