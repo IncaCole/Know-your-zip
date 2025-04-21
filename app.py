@@ -131,9 +131,40 @@ with tab1:
     
     with col1:
         st.subheader("🔍 Quick Search")
-        zip_code = st.text_input("Enter a ZIP code:", max_chars=5, key="zip_search")
-        if zip_code:
-            st.success(f"Searching for ZIP code: {zip_code}")
+        search_type = st.radio(
+            "Search by:",
+            ["ZIP Code", "Full Address"],
+            horizontal=True,
+            key="search_type"
+        )
+        
+        if search_type == "ZIP Code":
+            search_input = st.text_input(
+                "Enter a ZIP code:",
+                max_chars=5,
+                key="zip_search",
+                placeholder="e.g., 90210"
+            )
+        else:
+            search_input = st.text_input(
+                "Enter a full address:",
+                key="address_search",
+                placeholder="e.g., 123 Main St, City, State"
+            )
+            
+        # Add search button
+        search_button = st.button("SEARCH", type="primary", use_container_width=True)
+        
+        if search_button and search_input:
+            if search_type == "ZIP Code":
+                if search_input.isdigit() and len(search_input) == 5:
+                    st.success(f"Searching for ZIP code: {search_input}")
+                else:
+                    st.error("Please enter a valid 5-digit ZIP code")
+            else:
+                st.success(f"Searching for address: {search_input}")
+        elif search_button and not search_input:
+            st.warning("Please enter a search term before clicking SEARCH")
             
     with col2:
         st.subheader("📊 Quick Stats")
