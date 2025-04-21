@@ -1,66 +1,51 @@
-# Miami-Dade County Location Finder
+# Know Your Zip
 
-This application helps you find important locations near your address or zip code in Miami-Dade County, including:
+A Streamlit application that helps users find nearby locations in Miami-Dade County based on their address or zip code. The application uses various Miami-Dade County Open Data APIs to provide information about nearby hospitals, schools, parks, and zoning information.
 
-## Available Data Sources
+## Features
 
-### 🏥 Hospitals
-- **Source**: Miami-Dade County Open Data
-- **Endpoint**: `https://opendata.arcgis.com/datasets/MDC::hospitals.geojson`
-- **Update Frequency**: Monthly
-- **Fields**: Name, Address, City, Zipcode, Bed Capacity, Phone
+- Find nearby hospitals, schools, parks, and zoning information
+- Calculate distances from user's location
+- Interactive map display
+- Real-time data from Miami-Dade County Open Data APIs
 
-### 🏘️ Zoning
-- **Source**: Miami-Dade County Open Data
-- **Endpoint**: `https://opendata.arcgis.com/api/v3/datasets/69bda17d8d1f48e58268103aebf86546_0/downloads/data?format=geojson&spatialRefId=4326`
-- **Update Frequency**: Weekly
-- **Fields**: Zone ID, Code, Description, Township-Range-Section
+## Requirements
 
-### 🏫 Schools
-- **Source**: Miami-Dade County GIS
-- **Endpoint**: `https://gisweb.miamidade.gov/arcgis/rest/services/MD_SchoolBoardBuffer/MapServer/1/query?where=1=1&outFields=*&f=geojson`
-- **Update Frequency**: Quarterly
-- **Fields**: School Name, Address, City, Zipcode, Grades, Capacity
+- Python 3.7+
+- Streamlit
+- pandas
+- requests
+- geopy
+- folium
 
-### 🌳 Parks
-- **Source**: Miami-Dade County GIS
-- **Endpoint**: `https://services.arcgis.com/8Pc9XBTAsYuxx9Ny/arcgis/rest/services/Parks/FeatureServer/0/query?where=1%3D1&outFields=*&returnGeometry=true&f=geojson`
-- **Update Frequency**: Monthly
-- **Fields**: Name, Address, City, Zipcode, Class, Total Acres, Type
+## Installation
 
-## Setup
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/know-your-zip.git
+cd know-your-zip
+```
 
-1. Install the required dependencies:
+2. Install the required packages:
 ```bash
 pip install -r requirements.txt
 ```
 
-2. Run the main application:
+## Usage
+
+Run the application:
 ```bash
-streamlit run app.py
+streamlit run api_list.py
 ```
-
-3. To validate the data sources (optional):
-```bash
-python test_v.py
-```
-
-## Features
-
-- Enter your address or zip code to find nearby locations
-- View distances to each location
-- Sort results by distance
-- Data validation tool to check API connectivity
-- Support for both point and polygon geometry types
-- Beautiful and modern UI with Streamlit
-- Interactive maps with Folium
 
 ## Data Sources
 
-All data is pulled from the Miami-Dade County Open Data portal and GIS services:
-- https://gis-mdc.opendata.arcgis.com/
-- https://gisweb.miamidade.gov/
+The application uses the following Miami-Dade County Open Data APIs:
+- Hospitals
+- Zoning
+- Schools
+- Parks
 
-## Contributing
+## License
 
-Feel free to open issues or submit pull requests if you have suggestions for improvements or find any bugs.
+MIT License
