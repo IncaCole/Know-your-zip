@@ -1,5 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
+import folium
+from folium import plugins
 from api_list import get_coordinates, get_nearby_locations, display_nearby_locations, get_nearby_zip_codes
 
 # Set page configuration
@@ -284,8 +286,82 @@ def create_stats_dashboard(hospitals_df, schools_df, police_df, parks_df, zip_co
     # Close the dashboard container
     st.markdown("</div>", unsafe_allow_html=True)
 
+def create_interactive_map(user_location, search_input, hospitals_df, schools_df, police_df, parks_df, is_zip_code):
+    """Create an interactive map with markers for the location and nearby points of interest"""
+    # Create a map centered at the user's location
+    m = folium.Map(
+        location=[user_location['lat'], user_location['lng']],
+        zoom_start=12,
+        tiles='OpenStreetMap'
+    )
+    
+    # Add the main location marker
+    if is_zip_code:
+        # For ZIP codes, create a shaded area
+        folium.Circle(
+            location=[user_location['lat'], user_location['lng']],
+            radius=5000,  # 5km radius
+            color='#1a56db',
+            fill=True,
+            fill_color='#1a56db',
+            fill_opacity=0.2,
+            popup=f'ZIP Code: {search_input}'
+        ).add_to(m)
+    else:
+        # For exact addresses, add a red marker
+        folium.Marker(
+            location=[user_location['lat'], user_location['lng']],
+            popup=f'Address: {search_input}',
+            icon=folium.Icon(color='red', icon='info-sign')
+        ).add_to(m)
+    
+    # Add markers for hospitals
+    if not hospitals_df.empty:
+        for _, row in hospitals_df.iterrows():
+            folium.Marker(
+                location=[row['latitude'], row['longitude']],
+                popup=f"Hospital: {row['name']}",
+                icon=folium.Icon(color='blue', icon='plus-sign', prefix='fa')
+            ).add_to(m)
+    
+    # Add markers for schools
+    if not schools_df.empty:
+        for _, row in schools_df.iterrows():
+            folium.Marker(
+                location=[row['latitude'], row['longitude']],
+                popup=f"School: {row['name']}",
+                icon=folium.Icon(color='green', icon='book', prefix='fa')
+            ).add_to(m)
+    
+    # Add markers for police stations
+    if not police_df.empty:
+        for _, row in police_df.iterrows():
+            folium.Marker(
+                location=[row['latitude'], row['longitude']],
+                popup=f"Police Station: {row['name']}",
+                icon=folium.Icon(color='black', icon='shield', prefix='fa')
+            ).add_to(m)
+    
+    # Add markers for parks
+    if not parks_df.empty:
+        for _, row in parks_df.iterrows():
+            folium.Marker(
+                location=[row['latitude'], row['longitude']],
+                popup=f"Park: {row['name']}",
+                icon=folium.Icon(color='lightgreen', icon='tree-conifer', prefix='fa')
+            ).add_to(m)
+    
+    # Add a layer control to toggle different markers
+    folium.LayerControl().add_to(m)
+    
+    # Convert the map to HTML
+    map_html = m._repr_html_()
+    
+    # Display the map in Streamlit
+    components.html(map_html, height=600)
+
 # Create tabs with icons
-tab1, tab2, tab3 = st.tabs(["🏠 Home", "ℹ️ About", "📞 Contact"])
+tab1, tab2, tab3, tab4 = st.tabs(["🏠 Home", "🗺️ Map", "ℹ️ About", "📞 Contact"])
 
 with tab1:
     # Hero section
@@ -348,99 +424,20 @@ with tab1:
                             police_df = get_nearby_locations(user_location, 'police_stations')
                             parks_df = get_nearby_locations(user_location, 'parks')
                         
+                        # Store the data in session state for the Map tab
+                        st.session_state.user_location = user_location
+                        st.session_state.search_input = search_input
+                        st.session_state.hospitals_df = hospitals_df
+                        st.session_state.schools_df = schools_df
+                        st.session_state.police_df = police_df
+                        st.session_state.parks_df = parks_df
+                        st.session_state.is_zip_code = True
+                        
                         # Display the statistics dashboard
                         create_stats_dashboard(hospitals_df, schools_df, police_df, parks_df, search_input)
                         
-                        # What's Nearby section
-                        st.markdown("""
-                        <div style='margin-top: 2rem;'>
-                            <h2 style='color: #0d6efd;'>📍 What's Nearby</h2>
-                        </div>
-                        """, unsafe_allow_html=True)
-                        
-                        # Create tabs for different categories
-                        nearby_tabs = st.tabs(["🏥 Hospitals", "🏫 Schools", "👮 Police Stations", "🌳 Parks", "⚠️ Flood Hazards"])
-                        
-                        with nearby_tabs[0]:  # Hospitals
-                            st.markdown("""
-                            <div style='background-color: #f8f9fa; padding: 1.5rem; border-radius: 12px;'>
-                                <h3 style='color: #0d6efd;'>Hospitals in ZIP Code {}</h3>
-                            </div>
-                            """.format(search_input), unsafe_allow_html=True)
-                            if user_location:
-                                with st.spinner("Loading hospitals..."):
-                                    show_loading_spinner()
-                                    display_nearby_locations(hospitals_df, 'hospitals', search_input)
-                        
-                        with nearby_tabs[1]:  # Schools
-                            st.markdown("""
-                            <div style='background-color: #f8f9fa; padding: 1.5rem; border-radius: 12px;'>
-                                <h3 style='color: #0d6efd;'>Public Schools in ZIP Code {}</h3>
-                            </div>
-                            """.format(search_input), unsafe_allow_html=True)
-                            if user_location:
-                                with st.spinner("Loading schools..."):
-                                    show_loading_spinner()
-                                    display_nearby_locations(schools_df, 'schools', search_input)
-                        
-                        with nearby_tabs[2]:  # Police Stations
-                            st.markdown("""
-                            <div style='background-color: #f8f9fa; padding: 1.5rem; border-radius: 12px;'>
-                                <h3 style='color: #0d6efd;'>Police Stations in ZIP Code {}</h3>
-                            </div>
-                            """.format(search_input), unsafe_allow_html=True)
-                            if user_location:
-                                with st.spinner("Loading police stations..."):
-                                    show_loading_spinner()
-                                    display_nearby_locations(police_df, 'police stations', search_input)
-                        
-                        with nearby_tabs[3]:  # Parks
-                            st.markdown("""
-                            <div style='background-color: #f8f9fa; padding: 1.5rem; border-radius: 12px;'>
-                                <h3 style='color: #0d6efd;'>County Parks in ZIP Code {}</h3>
-                            </div>
-                            """.format(search_input), unsafe_allow_html=True)
-                            if user_location:
-                                with st.spinner("Loading parks..."):
-                                    show_loading_spinner()
-                                    display_nearby_locations(parks_df, 'parks', search_input)
-                        
-                        with nearby_tabs[4]:  # Flood Hazards
-                            st.markdown("""
-                            <div style='background-color: #f8f9fa; padding: 1.5rem; border-radius: 12px;'>
-                                <h3 style='color: #0d6efd;'>Flood Hazards in ZIP Code {}</h3>
-                            </div>
-                            """.format(search_input), unsafe_allow_html=True)
-                            if user_location:
-                                with st.spinner("Loading flood hazards..."):
-                                    show_loading_spinner()
-                                    flood_df = get_nearby_locations(user_location, 'flood_hazards')
-                                    display_nearby_locations(flood_df, 'flood hazards', search_input)
-                        
-                        # Nearby ZIP codes section
-                        st.markdown("""
-                        <div style='margin-top: 2rem;'>
-                            <h3 style='color: #0d6efd;'>Nearby ZIP Codes</h3>
-                            <p style='color: #ff0000;'>OUT OF YOUR ZIPCODE BUT NEARBY:</p>
-                        </div>
-                        """, unsafe_allow_html=True)
-                        
-                        with st.spinner("Loading nearby ZIP codes..."):
-                            show_loading_spinner()
-                            nearby_zips = get_nearby_zip_codes(search_input)
-                            if nearby_zips:
-                                st.markdown("""
-                                <div style='display: flex; flex-wrap: wrap; gap: 0.5rem;'>
-                                """, unsafe_allow_html=True)
-                                for zip_code in nearby_zips:
-                                    st.markdown(f"""
-                                    <div style='background-color: #f8f9fa; padding: 0.5rem 1rem; border-radius: 4px;'>
-                                        {zip_code}
-                                    </div>
-                                    """, unsafe_allow_html=True)
-                                st.markdown("</div>", unsafe_allow_html=True)
-                            else:
-                                st.info("No nearby ZIP codes found.")
+                        # Switch to the Map tab
+                        st.experimental_set_query_params(tab="Map")
                 else:
                     st.error("Please enter a valid 5-digit ZIP code")
             else:
@@ -469,6 +466,28 @@ with tab1:
     st.markdown('</div>', unsafe_allow_html=True)
 
 with tab2:
+    # Map tab content
+    st.markdown("""
+    <div style='text-align: center; margin-bottom: 2rem;'>
+        <h1 style='color: #0d6efd;'>Interactive Map 🗺️</h1>
+        <p style='color: #6c757d;'>Explore the location and nearby points of interest</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    if 'user_location' in st.session_state:
+        create_interactive_map(
+            st.session_state.user_location,
+            st.session_state.search_input,
+            st.session_state.hospitals_df,
+            st.session_state.schools_df,
+            st.session_state.police_df,
+            st.session_state.parks_df,
+            st.session_state.is_zip_code
+        )
+    else:
+        st.info("Please search for a location in the Home tab to view the map.")
+
+with tab3:
     # About page content
     st.markdown("""
     <div class="card">
@@ -497,7 +516,7 @@ with tab2:
     </div>
     """, unsafe_allow_html=True)
 
-with tab3:
+with tab4:
     # Contact page content
     st.markdown("""
     <div class="card">
