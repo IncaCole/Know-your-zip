@@ -107,8 +107,46 @@ st.markdown("""
     ::-webkit-scrollbar-thumb:hover {
         background: #555;
     }
+
+    /* Loading spinner */
+    .loading-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+    }
+
+    .globe-spinner {
+        width: 50px;
+        height: 50px;
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #0d6efd;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+        margin-top: 1rem;
+        color: #0d6efd;
+        font-weight: 600;
+    }
     </style>
 """, unsafe_allow_html=True)
+
+def show_loading_spinner():
+    """Display a loading spinner with a globe animation"""
+    st.markdown("""
+    <div class="loading-container">
+        <div class="globe-spinner"></div>
+        <div class="loading-text">Loading...</div>
+    </div>
+    """, unsafe_allow_html=True)
 
 # Create tabs with icons
 tab1, tab2, tab3 = st.tabs(["🏠 Home", "ℹ️ About", "📞 Contact"])
@@ -161,6 +199,11 @@ with tab1:
                 if search_input.isdigit() and len(search_input) == 5:
                     st.success(f"Searching for ZIP code: {search_input}")
                     
+                    # Show loading spinner while fetching data
+                    with st.spinner("Loading data..."):
+                        show_loading_spinner()
+                        user_location = get_coordinates(search_input)
+                    
                     # What's Nearby section
                     st.markdown("""
                     <div style='margin-top: 2rem;'>
@@ -177,10 +220,11 @@ with tab1:
                             <h3 style='color: #0d6efd;'>Hospitals in ZIP Code {}</h3>
                         </div>
                         """.format(search_input), unsafe_allow_html=True)
-                        user_location = get_coordinates(search_input)
                         if user_location:
-                            hospitals_df = get_nearby_locations(user_location, 'hospitals')
-                            display_nearby_locations(hospitals_df, 'hospitals', search_input)
+                            with st.spinner("Loading hospitals..."):
+                                show_loading_spinner()
+                                hospitals_df = get_nearby_locations(user_location, 'hospitals')
+                                display_nearby_locations(hospitals_df, 'hospitals', search_input)
                         
                     with nearby_tabs[1]:  # Schools
                         st.markdown("""
@@ -189,8 +233,10 @@ with tab1:
                         </div>
                         """.format(search_input), unsafe_allow_html=True)
                         if user_location:
-                            schools_df = get_nearby_locations(user_location, 'schools')
-                            display_nearby_locations(schools_df, 'schools', search_input)
+                            with st.spinner("Loading schools..."):
+                                show_loading_spinner()
+                                schools_df = get_nearby_locations(user_location, 'schools')
+                                display_nearby_locations(schools_df, 'schools', search_input)
                         
                     with nearby_tabs[2]:  # Police Stations
                         st.markdown("""
@@ -199,8 +245,10 @@ with tab1:
                         </div>
                         """.format(search_input), unsafe_allow_html=True)
                         if user_location:
-                            police_df = get_nearby_locations(user_location, 'police_stations')
-                            display_nearby_locations(police_df, 'police stations', search_input)
+                            with st.spinner("Loading police stations..."):
+                                show_loading_spinner()
+                                police_df = get_nearby_locations(user_location, 'police_stations')
+                                display_nearby_locations(police_df, 'police stations', search_input)
                         
                     with nearby_tabs[3]:  # Parks
                         st.markdown("""
@@ -209,8 +257,10 @@ with tab1:
                         </div>
                         """.format(search_input), unsafe_allow_html=True)
                         if user_location:
-                            parks_df = get_nearby_locations(user_location, 'parks')
-                            display_nearby_locations(parks_df, 'parks', search_input)
+                            with st.spinner("Loading parks..."):
+                                show_loading_spinner()
+                                parks_df = get_nearby_locations(user_location, 'parks')
+                                display_nearby_locations(parks_df, 'parks', search_input)
                         
                     with nearby_tabs[4]:  # Flood Hazards
                         st.markdown("""
@@ -219,8 +269,10 @@ with tab1:
                         </div>
                         """.format(search_input), unsafe_allow_html=True)
                         if user_location:
-                            flood_df = get_nearby_locations(user_location, 'flood_hazards')
-                            display_nearby_locations(flood_df, 'flood hazards', search_input)
+                            with st.spinner("Loading flood hazards..."):
+                                show_loading_spinner()
+                                flood_df = get_nearby_locations(user_location, 'flood_hazards')
+                                display_nearby_locations(flood_df, 'flood hazards', search_input)
                         
                     # Nearby ZIP codes section
                     st.markdown("""
@@ -230,20 +282,22 @@ with tab1:
                     </div>
                     """, unsafe_allow_html=True)
                     
-                    nearby_zips = get_nearby_zip_codes(search_input)
-                    if nearby_zips:
-                        st.markdown("""
-                        <div style='display: flex; flex-wrap: wrap; gap: 0.5rem;'>
-                        """, unsafe_allow_html=True)
-                        for zip_code in nearby_zips:
-                            st.markdown(f"""
-                            <div style='background-color: #f8f9fa; padding: 0.5rem 1rem; border-radius: 4px;'>
-                                {zip_code}
-                            </div>
+                    with st.spinner("Loading nearby ZIP codes..."):
+                        show_loading_spinner()
+                        nearby_zips = get_nearby_zip_codes(search_input)
+                        if nearby_zips:
+                            st.markdown("""
+                            <div style='display: flex; flex-wrap: wrap; gap: 0.5rem;'>
                             """, unsafe_allow_html=True)
-                        st.markdown("</div>", unsafe_allow_html=True)
-                    else:
-                        st.info("No nearby ZIP codes found.")
+                            for zip_code in nearby_zips:
+                                st.markdown(f"""
+                                <div style='background-color: #f8f9fa; padding: 0.5rem 1rem; border-radius: 4px;'>
+                                    {zip_code}
+                                </div>
+                                """, unsafe_allow_html=True)
+                            st.markdown("</div>", unsafe_allow_html=True)
+                        else:
+                            st.info("No nearby ZIP codes found.")
                 else:
                     st.error("Please enter a valid 5-digit ZIP code")
             else:
