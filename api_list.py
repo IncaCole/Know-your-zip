@@ -10,11 +10,7 @@ from streamlit_folium import folium_static
 from folium.plugins import MarkerCluster
 import time
 from typing import Optional, Dict, Any
-import logging
-
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+from src.logger import logger
 
 # API endpoints for Miami-Dade County Open Data
 API_ENDPOINTS = {
@@ -87,28 +83,21 @@ FALLBACK_DATA = {
 }
 
 def fetch_data_with_retry(endpoint: str, max_retries: int = 3, retry_delay: int = 2) -> Optional[Dict[str, Any]]:
-    """
-    Fetch data from an API endpoint with retry logic.
-    
-    Args:
-        endpoint: The API endpoint URL
-        max_retries: Maximum number of retry attempts
-        retry_delay: Delay between retries in seconds
-        
-    Returns:
-        JSON response data or None if all retries fail
-    """
+    """Fetch data from API with retry mechanism"""
     for attempt in range(max_retries):
         try:
-            response = requests.get(endpoint, timeout=10)
+            logger.info(f"Attempting to fetch data from {endpoint} (attempt {attempt + 1}/{max_retries})")
+            response = requests.get(endpoint)
             response.raise_for_status()
+            logger.info(f"Successfully fetched data from {endpoint}")
             return response.json()
         except requests.exceptions.RequestException as e:
-            logger.warning(f"Attempt {attempt + 1} failed for {endpoint}: {str(e)}")
+            logger.warning(f"Failed to fetch data from {endpoint}: {str(e)}")
             if attempt < max_retries - 1:
+                logger.info(f"Retrying in {retry_delay} seconds...")
                 time.sleep(retry_delay)
             else:
-                logger.error(f"All retry attempts failed for {endpoint}")
+                logger.error(f"All {max_retries} attempts failed for {endpoint}")
                 return None
 
 def get_coordinates(address: str) -> Optional[tuple]:

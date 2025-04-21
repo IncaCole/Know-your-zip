@@ -289,3 +289,91 @@ class DataLoader:
         except Exception as e:
             logger.error(f"Error merging ZIP code datasets: {str(e)}")
             return primary_df 
+
+    @staticmethod
+    def load_csv(file_path: str, **kwargs) -> pd.DataFrame:
+        """
+        Load data from a CSV file.
+        
+        Args:
+            file_path (str): Path to the CSV file
+            **kwargs: Additional arguments to pass to pandas.read_csv()
+            
+        Returns:
+            pd.DataFrame: Loaded data as a pandas DataFrame
+            
+        Raises:
+            FileNotFoundError: If the file doesn't exist
+            ValueError: If there's an error reading the file
+        """
+        try:
+            if not os.path.exists(file_path):
+                raise FileNotFoundError(f"File not found: {file_path}")
+            
+            logger.info(f"Loading CSV file: {file_path}")
+            return pd.read_csv(file_path, **kwargs)
+        except Exception as e:
+            logger.error(f"Error loading CSV file {file_path}: {str(e)}")
+            raise ValueError(f"Failed to load CSV file: {str(e)}")
+    
+    @staticmethod
+    def load_json(file_path: str) -> Union[Dict, List]:
+        """
+        Load data from a JSON file.
+        
+        Args:
+            file_path (str): Path to the JSON file
+            
+        Returns:
+            Union[Dict, List]: Loaded data as a dictionary or list
+            
+        Raises:
+            FileNotFoundError: If the file doesn't exist
+            ValueError: If there's an error reading the file
+        """
+        try:
+            if not os.path.exists(file_path):
+                raise FileNotFoundError(f"File not found: {file_path}")
+            
+            logger.info(f"Loading JSON file: {file_path}")
+            with open(file_path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:
+            logger.error(f"Error loading JSON file {file_path}: {str(e)}")
+            raise ValueError(f"Failed to load JSON file: {str(e)}")
+    
+    @staticmethod
+    def save_json(data: Any, file_path: str) -> None:
+        """
+        Save data to a JSON file.
+        
+        Args:
+            data (Any): Data to save
+            file_path (str): Path where to save the JSON file
+            
+        Raises:
+            ValueError: If there's an error saving the file
+        """
+        try:
+            logger.info(f"Saving JSON file: {file_path}")
+            with open(file_path, 'w', encoding='utf-8') as f:
+                json.dump(data, f, indent=4)
+        except Exception as e:
+            logger.error(f"Error saving JSON file {file_path}: {str(e)}")
+            raise ValueError(f"Failed to save JSON file: {str(e)}")
+
+# Example usage:
+if __name__ == "__main__":
+    # Example of loading a CSV file
+    try:
+        df = DataLoader.load_csv("example.csv")
+        print("CSV loaded successfully")
+    except Exception as e:
+        print(f"Error loading CSV: {e}")
+    
+    # Example of loading a JSON file
+    try:
+        data = DataLoader.load_json("example.json")
+        print("JSON loaded successfully")
+    except Exception as e:
+        print(f"Error loading JSON: {e}") 
