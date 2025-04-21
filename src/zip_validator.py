@@ -6,14 +6,25 @@ class ZIPValidator:
         # Basic ZIP code pattern (5 digits)
         self.zip_pattern = re.compile(r'^\d{5}$')
         
-        # Simple in-memory database of ZIP codes and their basic info
-        # This is just a sample - in a real application, you'd want to use a proper database
+        # South Florida ZIP code database
         self.zip_database = {
-            '10001': {'city': 'New York', 'state': 'NY', 'country': 'USA'},
-            '90210': {'city': 'Beverly Hills', 'state': 'CA', 'country': 'USA'},
-            '94105': {'city': 'San Francisco', 'state': 'CA', 'country': 'USA'},
-            '60601': {'city': 'Chicago', 'state': 'IL', 'country': 'USA'},
-            '75201': {'city': 'Dallas', 'state': 'TX', 'country': 'USA'},
+            # Miami-Dade County
+            '33101': {'city': 'Miami', 'state': 'FL', 'county': 'Miami-Dade', 'area': 'Downtown Miami'},
+            '33139': {'city': 'Miami Beach', 'state': 'FL', 'county': 'Miami-Dade', 'area': 'South Beach'},
+            '33156': {'city': 'Miami', 'state': 'FL', 'county': 'Miami-Dade', 'area': 'Pinecrest'},
+            '33180': {'city': 'Miami', 'state': 'FL', 'county': 'Miami-Dade', 'area': 'Aventura'},
+            
+            # Broward County
+            '33301': {'city': 'Fort Lauderdale', 'state': 'FL', 'county': 'Broward', 'area': 'Downtown'},
+            '33304': {'city': 'Fort Lauderdale', 'state': 'FL', 'county': 'Broward', 'area': 'Beach Area'},
+            '33023': {'city': 'Hollywood', 'state': 'FL', 'county': 'Broward', 'area': 'West Hollywood'},
+            '33324': {'city': 'Plantation', 'state': 'FL', 'county': 'Broward', 'area': 'Central Plantation'},
+            
+            # Palm Beach County
+            '33401': {'city': 'West Palm Beach', 'state': 'FL', 'county': 'Palm Beach', 'area': 'Downtown'},
+            '33432': {'city': 'Boca Raton', 'state': 'FL', 'county': 'Palm Beach', 'area': 'Downtown Boca'},
+            '33480': {'city': 'Palm Beach', 'state': 'FL', 'county': 'Palm Beach', 'area': 'Palm Beach Island'},
+            '33458': {'city': 'Jupiter', 'state': 'FL', 'county': 'Palm Beach', 'area': 'Jupiter'},
         }
 
     def validate_format(self, zip_code: str) -> bool:
@@ -61,6 +72,6 @@ class ZIPValidator:
             
         info = self.get_zip_info(zip_code)
         if info is None:
-            return False, "ZIP code not found in database.", None
+            return False, "ZIP code not found in South Florida database.", None
             
-        return True, "Valid ZIP code.", info 
+        return True, f"Valid South Florida ZIP code in {info['county']} County.", info 
