@@ -151,6 +151,89 @@ def calculate_distances(user_location: tuple, locations_df: pd.DataFrame) -> lis
             distances.append(None)
     return distances
 
+def get_nearby_locations(user_location: tuple, category: str, radius_miles: float = 5.0) -> pd.DataFrame:
+    """
+    Get nearby locations for a specific category within a given radius.
+    
+    Args:
+        user_location: Tuple of (latitude, longitude)
+        category: Type of location (hospitals, schools, etc.)
+        radius_miles: Search radius in miles
+        
+    Returns:
+        DataFrame containing nearby locations
+    """
+    try:
+        # Fetch data from API
+        data = fetch_data_with_retry(API_ENDPOINTS[category])
+        if data is None:
+            data = FALLBACK_DATA[category]
+            
+        if data and 'features' in data:
+            # Create DataFrame with both properties and geometry
+            features_with_geometry = []
+            for feature in data['features']:
+                properties = feature.get('properties', {})
+                properties['geometry'] = feature.get('geometry')
+                features_with_geometry.append(properties)
+            
+            df = pd.DataFrame(features_with_geometry)
+            
+            # Calculate distances
+            df['distance_miles'] = calculate_distances(user_location, df)
+            
+            # Filter by radius
+            df = df[df['distance_miles'] <= radius_miles]
+            
+            # Sort by distance
+            df = df.sort_values('distance_miles')
+            
+            return df
+        return pd.DataFrame()
+    except Exception as e:
+        logger.error(f"Error getting nearby {category}: {str(e)}")
+        return pd.DataFrame()
+
+def display_nearby_locations(df: pd.DataFrame, category: str, current_zip: str = None):
+    """
+    Display nearby locations in a formatted way.
+    
+    Args:
+        df: DataFrame containing location data
+        category: Type of location
+        current_zip: Current ZIP code (if available)
+    """
+    if df.empty:
+        st.info(f"No {category} found nearby.")
+        return
+        
+    for _, row in df.iterrows():
+        # Create a card for each location
+        st.markdown(f"""
+        <div style='background-color: #ffffff; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1);'>
+            <h4 style='color: #0d6efd; margin-bottom: 0.5rem;'>{row.get('name', 'Unknown')}</h4>
+            <p style='margin-bottom: 0.5rem;'><strong>Address:</strong> {row.get('address', 'N/A')}</p>
+            {f"<p style='margin-bottom: 0.5rem;'><strong>Phone:</strong> {row.get('phone', 'N/A')}</p>" if 'phone' in row else ''}
+            <p style='margin-bottom: 0.5rem;'><strong>Distance:</strong> {row['distance_miles']:.1f} miles</p>
+            {f"<p style='color: #ff0000;'>OUT OF YOUR ZIPCODE BUT NEARBY</p>" if current_zip and row.get('zip_code') != current_zip else ''}
+        </div>
+        """, unsafe_allow_html=True)
+
+def get_nearby_zip_codes(zip_code: str, radius_miles: float = 5.0) -> list:
+    """
+    Get nearby ZIP codes within a given radius.
+    
+    Args:
+        zip_code: Current ZIP code
+        radius_miles: Search radius in miles
+        
+    Returns:
+        List of nearby ZIP codes
+    """
+    # This is a placeholder - you would need to implement actual ZIP code distance calculation
+    # using a ZIP code database or API
+    return []
+
 def main():
     st.title("Miami-Dade County Location Finder")
     
