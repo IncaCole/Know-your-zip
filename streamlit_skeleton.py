@@ -166,6 +166,75 @@ st.markdown("""
         padding: 1rem;
         border: 1px solid #e6f0ff;
     }
+
+    /* Mobile Responsive Design */
+    @media screen and (max-width: 768px) {
+        /* Main container adjustments */
+        .main .block-container {
+            padding: 1rem;
+        }
+        
+        /* Tab adjustments */
+        .stTabs [data-baseweb="tab-list"] {
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .stTabs [data-baseweb="tab"] {
+            height: 40px;
+            padding: 5px 10px;
+            font-size: 0.9rem;
+        }
+        
+        /* Card adjustments */
+        .card {
+            padding: 1rem;
+        }
+        
+        /* Metric adjustments */
+        .stMetric {
+            padding: 1rem;
+        }
+        
+        /* Button adjustments */
+        .stButton>button {
+            height: 2.5em;
+            font-size: 0.9rem;
+        }
+        
+        /* Input field adjustments */
+        .stTextInput>div>div>input {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.9rem;
+        }
+        
+        /* Loading spinner adjustments */
+        .loading-container {
+            padding: 1rem;
+        }
+        
+        .globe-spinner {
+            width: 40px;
+            height: 40px;
+        }
+    }
+    
+    /* Small mobile devices */
+    @media screen and (max-width: 480px) {
+        .stTabs [data-baseweb="tab"] {
+            height: 35px;
+            padding: 3px 8px;
+            font-size: 0.8rem;
+        }
+        
+        .card {
+            padding: 0.8rem;
+        }
+        
+        .stMetric {
+            padding: 0.8rem;
+        }
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -371,6 +440,56 @@ def show_toast(message, type="success"):
     elif type == "warning":
         st.toast(message, icon="⚠️")
 
+def test_mobile_responsive_layout():
+    """Test the mobile responsive layout with different screen sizes"""
+    st.markdown("""
+    <div class="card">
+        <h2 style='color: #1a56db; text-align: center;'>📱 Mobile Responsive Layout Test</h2>
+        <p style='text-align: center; color: #6c757d;'>Test how the layout adapts to different screen sizes</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Test different layout components
+    st.markdown("### 1. Column Layout Test")
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Test Metric 1", "123", "+10%")
+    with col2:
+        st.metric("Test Metric 2", "456", "-5%")
+    with col3:
+        st.metric("Test Metric 3", "789", "0%")
+    
+    st.markdown("### 2. Input Fields Test")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.text_input("Test Input 1", placeholder="Type something...")
+    with col2:
+        st.text_input("Test Input 2", placeholder="Type something...")
+    
+    st.markdown("### 3. Button Test")
+    st.button("Test Button", use_container_width=True)
+    
+    st.markdown("### 4. Card Layout Test")
+    st.markdown("""
+    <div class="card">
+        <h3>Test Card</h3>
+        <p>This is a test card to check responsive behavior.</p>
+        <p>On mobile devices, the padding and margins should adjust automatically.</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("### 5. Loading Spinner Test")
+    show_loading_spinner()
+    
+    st.markdown("### 6. Tab Navigation Test")
+    tab1, tab2, tab3 = st.tabs(["Tab 1", "Tab 2", "Tab 3"])
+    with tab1:
+        st.write("Content for Tab 1")
+    with tab2:
+        st.write("Content for Tab 2")
+    with tab3:
+        st.write("Content for Tab 3")
+
 # Create tabs with icons
 tab1, tab2, tab3, tab4 = st.tabs(["🏠 Home", "🗺️ Map", "ℹ️ About", "📞 Contact"])
 
@@ -384,6 +503,9 @@ with tab1:
         </p>
     </div>
     """, unsafe_allow_html=True)
+    
+    # Add mobile responsive test section
+    test_mobile_responsive_layout()
     
     # Main content in a card
     st.markdown('<div class="card">', unsafe_allow_html=True)
