@@ -51,10 +51,13 @@ class Chatbot:
 
 # Example usage
 if __name__ == "__main__":
-    # TODO: Move API key to secrets.toml for better security
-    API_KEY = "tgp_v1_NvSonUeuP53ALKKny7Klz-_iCowGiWALuJ76PTfZ_Po"
+    import os
+    from dotenv import load_dotenv
     
-    chatbot = Chatbot(api_key=API_KEY)
+    # Load environment variables
+    load_dotenv()
+    
+    chatbot = Chatbot(api_key=os.getenv("TOGETHER_API_KEY"))
     test_question = "What is the capital of France?"
     response = chatbot.generate_answer(test_question)
     
@@ -62,4 +65,4 @@ if __name__ == "__main__":
         print(f"Question: {test_question}")
         print(f"Response: {response}")
     else:
-        print("Failed to get response after all retries") 
+        print("Failed to get response after all retries")
