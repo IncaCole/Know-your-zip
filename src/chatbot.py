@@ -30,7 +30,7 @@ class Chatbot:
             raise ValueError("No API key found. Please set TOGETHER_API_KEY in Streamlit secrets or environment variables.")
             
         self.client = Together(api_key=api_key)
-        self.model = "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free"
+        self.model = "meta-llama/Llama-3.3-70B-Instruct-Turbo"
         self.max_retries = 3
         self.retry_delay = 2  # seconds
 
