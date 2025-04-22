@@ -1,24 +1,14 @@
-# Know Your Zip
+# Know Your ZIP
 
-A Streamlit application that helps users find nearby locations in Miami-Dade County based on their address or zip code. The application uses various Miami-Dade County Open Data APIs to provide information about nearby hospitals, schools, parks, and zoning information.
+A Streamlit application that provides information about locations near a given ZIP code, including schools, hospitals, parks, and more. The app features an AI assistant powered by Llama 3 for answering questions about the local area.
 
 ## Features
 
-- Find nearby hospitals, schools, parks, and zoning information
-- Calculate distances from user's location
-- Interactive map display
-- Real-time data from Miami-Dade County Open Data APIs
+- **Dashboard**: View summary statistics and detailed information about nearby locations
+- **Map View**: Interactive map showing nearby points of interest
+- **AI Assistant**: Chat with an AI assistant about your local area
 
-## Requirements
-
-- Python 3.7+
-- Streamlit
-- pandas
-- requests
-- geopy
-- folium
-
-## Installation
+## Setup
 
 1. Clone the repository:
 ```bash
@@ -26,26 +16,39 @@ git clone https://github.com/yourusername/know-your-zip.git
 cd know-your-zip
 ```
 
-2. Install the required packages:
+2. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-## Usage
-
-Run the application:
-```bash
-streamlit run api_list.py
+3. Create a `.env` file in the root directory with your Together API key:
 ```
+TOGETHER_API_KEY=your_api_key_here
+```
+
+## Running the Application
+
+1. Start the Streamlit app:
+```bash
+streamlit run app.py
+```
+
+2. Open your browser and navigate to the URL shown in the terminal (typically http://localhost:8501)
+
+3. Enter a ZIP code in the sidebar to begin exploring the data
 
 ## Data Sources
 
-The application uses the following Miami-Dade County Open Data APIs:
-- Hospitals
-- Zoning
+The application uses various data sources to provide information about:
 - Schools
+- Hospitals
 - Parks
+- Other points of interest
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-MIT License
+This project is licensed under the MIT License - see the LICENSE file for details.

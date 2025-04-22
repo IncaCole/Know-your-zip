@@ -1,8 +1,9 @@
-streamlit==1.31.0
-pandas==2.1.4
+streamlit==1.32.0
+pandas==2.2.0
 requests==2.31.0
 geopy==2.4.1
 folium==0.15.1
-streamlit-folium==0.15.0
-python-dotenv==1.0.0
-tabulate==0.9.0 
+streamlit-folium==0.15.1
+python-dotenv==1.0.1
+tabulate==0.9.0
+together==0.2.5 
