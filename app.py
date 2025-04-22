@@ -3,7 +3,6 @@ import pandas as pd
 import folium
 from streamlit_folium import folium_static
 from src.data_loader import DataLoader
-from src.chatbot import Chatbot
 from src.zip_validator import ZipValidator
 import os
 from dotenv import load_dotenv
@@ -14,7 +13,6 @@ load_dotenv()
 # Initialize components
 data_loader = DataLoader()
 zip_validator = ZipValidator()
-chatbot = Chatbot()  # No need to pass API key explicitly, it will be handled internally
 
 # Page config
 st.set_page_config(
@@ -33,7 +31,7 @@ if zip_code:
         st.error("Please enter a valid ZIP code")
     else:
         # Create tabs
-        tab1, tab2, tab3 = st.tabs(["Dashboard", "Map View", "AI Assistant"])
+        tab1, tab2 = st.tabs(["Dashboard", "Map View"])
         
         with tab1:
             st.header("Dashboard")
@@ -104,35 +102,5 @@ if zip_code:
                 
             except Exception as e:
                 st.error(f"Error displaying map: {str(e)}")
-        
-        with tab3:
-            st.header("AI Assistant")
-            
-            # Initialize chat history
-            if "messages" not in st.session_state:
-                st.session_state.messages = []
-            
-            # Display chat history
-            for message in st.session_state.messages:
-                with st.chat_message(message["role"]):
-                    st.markdown(message["content"])
-            
-            # Chat input
-            if prompt := st.chat_input("Ask about your area"):
-                # Add user message to chat history
-                st.session_state.messages.append({"role": "user", "content": prompt})
-                
-                # Display user message
-                with st.chat_message("user"):
-                    st.markdown(prompt)
-                
-                # Generate response
-                with st.chat_message("assistant"):
-                    response = chatbot.generate_answer(prompt)
-                    if response:
-                        st.markdown(response)
-                        st.session_state.messages.append({"role": "assistant", "content": response})
-                    else:
-                        st.error("Sorry, I couldn't generate a response. Please try again.")
 else:
     st.info("Please enter a ZIP code in the sidebar to begin.") 
