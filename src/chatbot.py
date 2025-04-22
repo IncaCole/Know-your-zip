@@ -2,19 +2,33 @@ from together import Together
 import time
 from typing import Optional
 import logging
+import streamlit as st
+import os
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class Chatbot:
-    def __init__(self, api_key: str):
+    def __init__(self, api_key: Optional[str] = None):
         """
         Initialize the chatbot with Together API client.
         
         Args:
-            api_key (str): Together API key
+            api_key (str, optional): Together API key. If not provided, will try to get from Streamlit secrets or environment
         """
+        # Try to get API key from different sources
+        if api_key is None:
+            # First try Streamlit secrets
+            try:
+                api_key = st.secrets["TOGETHER_API_KEY"]
+            except Exception:
+                # Then try environment variable
+                api_key = os.getenv("TOGETHER_API_KEY")
+        
+        if not api_key:
+            raise ValueError("No API key found. Please set TOGETHER_API_KEY in Streamlit secrets or environment variables.")
+            
         self.client = Together(api_key=api_key)
         self.model = "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free"
         self.max_retries = 3

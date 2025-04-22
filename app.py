@@ -8,13 +8,13 @@ from src.zip_validator import ZipValidator
 import os
 from dotenv import load_dotenv
 
-# Load environment variables
+# Load environment variables (for local development)
 load_dotenv()
 
 # Initialize components
 data_loader = DataLoader()
 zip_validator = ZipValidator()
-chatbot = Chatbot(api_key=os.getenv("TOGETHER_API_KEY"))
+chatbot = Chatbot()  # No need to pass API key explicitly, it will be handled internally
 
 # Page config
 st.set_page_config(
