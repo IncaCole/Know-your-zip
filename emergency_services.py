@@ -23,8 +23,6 @@ class EmergencyServicesAPI(APIInfrastructure):
         )
         self.police_stations_url = "https://services.arcgis.com/8Pc9XBTAsYuxx9Ny/arcgis/rest/services/PoliceStation_gdb/FeatureServer/0/query"
         self.fire_stations_url = "https://services.arcgis.com/8Pc9XBTAsYuxx9Ny/arcgis/rest/services/FireStation_gdb/FeatureServer/0/query"
-        self.flood_zones_url = "https://services.arcgis.com/8Pc9XBTAsYuxx9Ny/arcgis/rest/services/FEMAFloodZone_gdb/FeatureServer/0/query"
-        self.evacuation_routes_url = "https://services.arcgis.com/8Pc9XBTAsYuxx9Ny/arcgis/rest/services/PrimaryEvacuationRoute_gdb/FeatureServer/0/query"
     
     def get_emergency_services(self, 
                              zip_code: str, 
@@ -151,40 +149,6 @@ class EmergencyServicesAPI(APIInfrastructure):
         response = requests.get(self.fire_stations_url, params=params)
         response.raise_for_status()
         return response.json()
-    
-    def get_flood_zones(self) -> Dict[str, Any]:
-        """
-        Get flood zones data from the Miami-Dade County GIS service.
-        
-        Returns:
-            Dict[str, Any]: GeoJSON data containing flood zone information
-        """
-        params = {
-            'outFields': '*',
-            'where': '1=1',
-            'f': 'geojson'
-        }
-        
-        response = requests.get(self.flood_zones_url, params=params)
-        response.raise_for_status()
-        return response.json()
-    
-    def get_evacuation_routes(self) -> Dict[str, Any]:
-        """
-        Get evacuation routes data from the Miami-Dade County GIS service.
-        
-        Returns:
-            Dict[str, Any]: GeoJSON data containing evacuation route information
-        """
-        params = {
-            'outFields': '*',
-            'where': '1=1',
-            'f': 'geojson'
-        }
-        
-        response = requests.get(self.evacuation_routes_url, params=params)
-        response.raise_for_status()
-        return response.json()
 
 # Example usage:
 # emergency_api = EmergencyServicesAPI()
@@ -193,6 +157,4 @@ class EmergencyServicesAPI(APIInfrastructure):
 # facilities = emergency_api.get_emergency_facilities('12345', facility_type='fire_station')
 # contacts = emergency_api.get_emergency_contacts('12345', contact_type='police')
 # police_stations = emergency_api.get_police_stations()
-# fire_stations = emergency_api.get_fire_stations()
-# flood_zones = emergency_api.get_flood_zones()
-# evacuation_routes = emergency_api.get_evacuation_routes() 
+# fire_stations = emergency_api.get_fire_stations() 

@@ -68,31 +68,6 @@ class APIInfrastructure:
             print(f"API request failed: {str(e)}")
             raise
 
-class BusRoutesAPI(APIInfrastructure):
-    """Class for handling Miami-Dade bus routes API operations."""
-    
-    def __init__(self):
-        """Initialize the bus routes API with the specific base URL."""
-        super().__init__(
-            base_url="https://services.arcgis.com/8Pc9XBTAsYuxx9Ny/arcgis/rest/services/BusRoutes/FeatureServer/0"
-        )
-    
-    def get_all_routes(self) -> Dict[str, Any]:
-        """
-        Get all bus routes from the API.
-        
-        Returns:
-            Dict[str, Any]: The bus routes data in GeoJSON format
-        """
-        params = {
-            'outFields': '*',
-            'where': '1=1',
-            'f': 'geojson'
-        }
-        
-        response = self.make_request('query', params=params)
-        return response.json()
-
 class BusStopsAPI(APIInfrastructure):
     """Class for handling Miami-Dade bus stops API operations."""
     
@@ -171,8 +146,6 @@ class ParksAPI(APIInfrastructure):
 # Example usage:
 # api = APIInfrastructure(base_url="https://api.example.com")
 # response = api.make_request("endpoint", method="POST", data={"key": "value"})
-# bus_api = BusRoutesAPI()
-# routes = bus_api.get_all_routes()
 # stops_api = BusStopsAPI()
 # stops = stops_api.get_all_stops()
 # libraries_api = LibrariesAPI()
