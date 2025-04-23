@@ -17,6 +17,7 @@ st.write("Enter your address or ZIP code to find nearby schools and education fa
 EDUCATION_API_ENDPOINTS = {
     'public_schools': 'https://services.arcgis.com/8Pc9XBTAsYuxx9Ny/arcgis/rest/services/SchoolSite_gdb/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson',
     'private_schools': 'https://services.arcgis.com/8Pc9XBTAsYuxx9Ny/arcgis/rest/services/PrivateSchool_gdb/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson',
+    'charter_schools': 'https://services.arcgis.com/8Pc9XBTAsYuxx9Ny/arcgis/rest/services/CharterSchool_gdb/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson',
     'bus_stops': 'https://services.arcgis.com/8Pc9XBTAsYuxx9Ny/arcgis/rest/services/MDCPSBusStop_gdb/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson'
 }
 
@@ -31,7 +32,7 @@ zip_validator = get_zip_validator()
 location_input = st.text_input("Enter your address or ZIP code")
 
 # Education facility types
-facility_types = ['Public Schools', 'Private Schools', 'School Bus Stops']
+facility_types = ['Public Schools', 'Private Schools', 'Charter Schools', 'School Bus Stops']
 selected_type = st.selectbox("Select facility type", facility_types)
 
 # Search radius
@@ -115,6 +116,8 @@ if st.button("Find Nearby Education Facilities"):
                     data = fetch_data_with_retry(EDUCATION_API_ENDPOINTS['public_schools'])
                 elif selected_type == 'Private Schools':
                     data = fetch_data_with_retry(EDUCATION_API_ENDPOINTS['private_schools'])
+                elif selected_type == 'Charter Schools':
+                    data = fetch_data_with_retry(EDUCATION_API_ENDPOINTS['charter_schools'])
                 else:  # School Bus Stops
                     data = fetch_data_with_retry(EDUCATION_API_ENDPOINTS['bus_stops'])
                 
@@ -143,9 +146,9 @@ if st.button("Find Nearby Education Facilities"):
                         display_df['Distance (miles)'] = df['distance_miles'].round(2)
                         
                         # Add type-specific columns
-                        if selected_type == 'Public Schools' or selected_type == 'Private Schools':
-                            if 'GRADES' in df.columns:
-                                display_df['Grades'] = df['GRADES']
+                        if selected_type in ['Public Schools', 'Private Schools', 'Charter Schools']:
+                            if 'GRADE' in df.columns:
+                                display_df['Grades'] = df['GRADE']
                             if 'ENROLLMNT' in df.columns:
                                 display_df['Enrollment'] = df['ENROLLMNT']
                             if 'CAPACITY' in df.columns:
@@ -180,13 +183,14 @@ if st.button("Find Nearby Education Facilities"):
                                 st.write(f"Furthest: {display_df.iloc[-1]['Name']} ({display_df.iloc[-1]['Distance (miles)']} miles)")
                             with col3:
                                 st.write("Facility Statistics:")
-                                if selected_type in ['Public Schools', 'Private Schools']:
+                                if selected_type in ['Public Schools', 'Private Schools', 'Charter Schools']:
                                     if 'CAPACITY' in df.columns and 'ENROLLMNT' in df.columns:
                                         total_capacity = df['CAPACITY'].sum()
                                         total_enrollment = df['ENROLLMNT'].sum()
                                         st.write(f"Total Capacity: {total_capacity:,}")
                                         st.write(f"Total Enrollment: {total_enrollment:,}")
-                                        st.write(f"Utilization: {(total_enrollment/total_capacity*100):.1f}%")
+                                        if total_capacity > 0:
+                                            st.write(f"Utilization: {(total_enrollment/total_capacity*100):.1f}%")
                         
                         # Display raw data option
                         if st.checkbox("Show raw data"):
@@ -198,5 +202,7 @@ if st.button("Find Nearby Education Facilities"):
                     st.error(f"Could not fetch {selected_type} data")
             except Exception as e:
                 st.error(f"Error fetching {selected_type} data: {str(e)}")
+                st.write("Debug info:")
+                st.write("Data:", data)
         else:
             st.error("Could not find coordinates for the provided location") 

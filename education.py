@@ -23,9 +23,9 @@ logger = logging.getLogger(__name__)
 EDUCATION_API_ENDPOINTS = {
     'public_schools': 'https://services.arcgis.com/8Pc9XBTAsYuxx9Ny/arcgis/rest/services/SchoolSite_gdb/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson',
     'private_schools': 'https://services.arcgis.com/8Pc9XBTAsYuxx9Ny/arcgis/rest/services/PrivateSchool_gdb/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson',
+    'charter_schools': 'https://services.arcgis.com/8Pc9XBTAsYuxx9Ny/arcgis/rest/services/CharterSchool_gdb/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson',
     'school_ratings': 'https://services.arcgis.com/8Pc9XBTAsYuxx9Ny/arcgis/rest/services/SchoolRatings/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson',
-    'school_boundaries': 'https://services.arcgis.com/8Pc9XBTAsYuxx9Ny/arcgis/rest/services/SchoolBoundaries/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson',
-    'bus_stops': 'https://services.arcgis.com/8Pc9XBTAsYuxx9Ny/arcgis/rest/services/MDCPSBusStop_gdb/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson'
+    'school_boundaries': 'https://services.arcgis.com/8Pc9XBTAsYuxx9Ny/arcgis/rest/services/SchoolBoundaries/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson'
 }
 
 class EducationAPI:
@@ -75,7 +75,7 @@ class EducationAPI:
         
         Args:
             zip_code: The ZIP code to search for schools
-            school_type: Type of schools to return ('public', 'private', or 'all')
+            school_type: Type of schools to return ('public', 'private', 'charter', or 'all')
             
         Returns:
             Dict containing school information
@@ -99,6 +99,15 @@ class EducationAPI:
                         properties = feature.get('properties', {})
                         if str(properties.get('ZIPCODE')) == str(zip_code):
                             properties['school_type'] = 'private'
+                            schools.append(properties)
+            
+            if school_type in ['charter', 'all']:
+                charter_data = self.fetch_data_with_retry(EDUCATION_API_ENDPOINTS['charter_schools'])
+                if charter_data and 'features' in charter_data:
+                    for feature in charter_data['features']:
+                        properties = feature.get('properties', {})
+                        if str(properties.get('ZIPCODE')) == str(zip_code):
+                            properties['school_type'] = 'charter'
                             schools.append(properties)
             
             return success_response(
@@ -157,80 +166,6 @@ class EducationAPI:
             logger.error(f"Error searching for school '{name}': {str(e)}")
             return error_response(
                 message=f"Error processing school search: {str(e)}",
-                error_code="PROCESSING_ERROR"
-            )
-
-    def get_bus_stops_by_zip(self, zip_code: str) -> Dict[str, Any]:
-        """
-        Get bus stops within a specific ZIP code.
-        
-        Args:
-            zip_code: The ZIP code to search for bus stops
-            
-        Returns:
-            Dict containing bus stop information
-        """
-        try:
-            data = self.fetch_data_with_retry(EDUCATION_API_ENDPOINTS['bus_stops'])
-            if data and 'features' in data:
-                bus_stops = []
-                for feature in data['features']:
-                    properties = feature.get('properties', {})
-                    location = properties.get('LOCATION', '')
-                    if str(zip_code) in location:
-                        bus_stops.append(properties)
-                
-                return success_response(
-                    message=f"Found {len(bus_stops)} bus stops in ZIP code {zip_code}",
-                    data={'bus_stops': bus_stops}
-                )
-            return error_response(
-                message="Failed to fetch bus stop data",
-                error_code="API_ERROR"
-            )
-        except Exception as e:
-            logger.error(f"Error getting bus stops for ZIP code {zip_code}: {str(e)}")
-            return error_response(
-                message=f"Error processing bus stop data: {str(e)}",
-                error_code="PROCESSING_ERROR"
-            )
-
-    def get_bus_stops_by_route(self, route_id: str) -> Dict[str, Any]:
-        """
-        Get bus stops for a specific route.
-        
-        Args:
-            route_id: The route ID to search for bus stops
-            
-        Returns:
-            Dict containing bus stop information
-        """
-        try:
-            data = self.fetch_data_with_retry(EDUCATION_API_ENDPOINTS['bus_stops'])
-            if data and 'features' in data:
-                bus_stops = []
-                for feature in data['features']:
-                    properties = feature.get('properties', {})
-                    if properties.get('ROUTEID') == route_id:
-                        bus_stops.append(properties)
-                
-                if bus_stops:
-                    return success_response(
-                        message=f"Found {len(bus_stops)} bus stops for route {route_id}",
-                        data={'bus_stops': bus_stops}
-                    )
-                return error_response(
-                    message=f"No bus stops found for route {route_id}",
-                    error_code="NOT_FOUND"
-                )
-            return error_response(
-                message="Failed to fetch bus stop data",
-                error_code="API_ERROR"
-            )
-        except Exception as e:
-            logger.error(f"Error getting bus stops for route {route_id}: {str(e)}")
-            return error_response(
-                message=f"Error processing bus stop data: {str(e)}",
                 error_code="PROCESSING_ERROR"
             )
 
@@ -304,6 +239,41 @@ class EducationAPI:
                 error_code="PROCESSING_ERROR"
             )
 
+    def get_charter_schools_by_zip(self, zip_code: str) -> Dict[str, Any]:
+        """
+        Get charter schools within a specific ZIP code.
+        
+        Args:
+            zip_code: The ZIP code to search for charter schools
+            
+        Returns:
+            Dict containing charter school information
+        """
+        try:
+            data = self.fetch_data_with_retry(EDUCATION_API_ENDPOINTS['charter_schools'])
+            if data and 'features' in data:
+                charter_schools = []
+                for feature in data['features']:
+                    properties = feature.get('properties', {})
+                    if str(properties.get('ZIPCODE')) == str(zip_code):
+                        properties['school_type'] = 'charter'
+                        charter_schools.append(properties)
+                
+                return success_response(
+                    message=f"Found {len(charter_schools)} charter schools in ZIP code {zip_code}",
+                    data={'charter_schools': charter_schools}
+                )
+            return error_response(
+                message="Failed to fetch charter school data",
+                error_code="API_ERROR"
+            )
+        except Exception as e:
+            logger.error(f"Error getting charter schools for ZIP code {zip_code}: {str(e)}")
+            return error_response(
+                message=f"Error processing charter school data: {str(e)}",
+                error_code="PROCESSING_ERROR"
+            )
+
 def main():
     """Example usage of the EducationAPI class."""
     api = EducationAPI()
@@ -323,13 +293,6 @@ def main():
         print(f"Found {len(search_response['data']['schools'])} schools matching '{school_name}'")
     else:
         print(f"Error: {search_response['message']}")
-    
-    # Example: Get bus stops in a ZIP code
-    bus_stops_response = api.get_bus_stops_by_zip(zip_code)
-    if bus_stops_response['success']:
-        print(f"Found {len(bus_stops_response['data']['bus_stops'])} bus stops in ZIP code {zip_code}")
-    else:
-        print(f"Error: {bus_stops_response['message']}")
 
 if __name__ == "__main__":
     main() 

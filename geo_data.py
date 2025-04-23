@@ -18,6 +18,7 @@ class GeoDataAPI(APIInfrastructure):
         self.flood_zones_url = f"{self.base_url}/FEMAFloodZone_gdb/FeatureServer/0/query"
         self.evacuation_routes_url = f"{self.base_url}/PrimaryEvacuationRoute_gdb/FeatureServer/0/query"
         self.bus_routes_url = f"{self.base_url}/BusRoutes/FeatureServer/0/query"
+        self.bus_stops_url = f"{self.base_url}/MDCPSBusStop_gdb/FeatureServer/0/query"
     
     def get_flood_zones(self) -> Dict[str, Any]:
         """
@@ -67,6 +68,26 @@ class GeoDataAPI(APIInfrastructure):
         }
         
         response = requests.get(self.bus_routes_url, params=params)
+        response.raise_for_status()
+        return response.json()
+
+    def get_bus_stops_by_zip(self, zip_code: str) -> Dict[str, Any]:
+        """
+        Get bus stops within a specific ZIP code.
+        
+        Args:
+            zip_code: The ZIP code to search for bus stops
+            
+        Returns:
+            Dict[str, Any]: GeoJSON data containing bus stop information
+        """
+        params = {
+            'outFields': '*',
+            'where': f"ZIPCODE = '{zip_code}'",
+            'f': 'geojson'
+        }
+        
+        response = requests.get(self.bus_stops_url, params=params)
         response.raise_for_status()
         return response.json()
 
