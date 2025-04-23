@@ -98,53 +98,53 @@ class HealthcareAPI(APIInfrastructure):
                     logger.error(f"All {max_retries} attempts failed for {endpoint}")
                     return None
 
-    def get_hospitals(self) -> List[Dict[str, Any]]:
+    def get_hospitals(self) -> Dict[str, Any]:
         """
         Get hospitals from the ArcGIS API.
         
         Returns:
-            List[Dict[str, Any]]: List of hospitals with their details
+            Dict[str, Any]: Dictionary containing hospital features
         """
         try:
             data = self.fetch_data_with_retry(API_ENDPOINTS['hospitals'])
             if data is None:
-                data = FALLBACK_DATA['hospitals']
-            return data.get('features', [])
+                return FALLBACK_DATA['hospitals']
+            return data
         except Exception as e:
             logger.error(f"Error fetching hospitals: {e}")
-            return FALLBACK_DATA['hospitals']['features']
+            return FALLBACK_DATA['hospitals']
 
-    def get_mental_health_centers(self) -> List[Dict[str, Any]]:
+    def get_mental_health_centers(self) -> Dict[str, Any]:
         """
         Get mental health centers from the ArcGIS API.
         
         Returns:
-            List[Dict[str, Any]]: List of mental health centers with their details
+            Dict[str, Any]: Dictionary containing mental health center features
         """
         try:
             data = self.fetch_data_with_retry(API_ENDPOINTS['mental_health'])
             if data is None:
-                data = FALLBACK_DATA['mental_health']
-            return data.get('features', [])
+                return FALLBACK_DATA['mental_health']
+            return data
         except Exception as e:
             logger.error(f"Error fetching mental health centers: {e}")
-            return FALLBACK_DATA['mental_health']['features']
+            return FALLBACK_DATA['mental_health']
 
-    def get_free_standing_clinics(self) -> List[Dict[str, Any]]:
+    def get_free_standing_clinics(self) -> Dict[str, Any]:
         """
         Get free-standing clinics from the ArcGIS API.
         
         Returns:
-            List[Dict[str, Any]]: List of free-standing clinics with their details
+            Dict[str, Any]: Dictionary containing clinic features
         """
         try:
             data = self.fetch_data_with_retry(API_ENDPOINTS['clinics'])
             if data is None:
-                data = FALLBACK_DATA['clinics']
-            return data.get('features', [])
+                return FALLBACK_DATA['clinics']
+            return data
         except Exception as e:
             logger.error(f"Error fetching free-standing clinics: {e}")
-            return FALLBACK_DATA['clinics']['features']
+            return FALLBACK_DATA['clinics']
 
     def get_all_healthcare_facilities(self) -> Dict[str, List[Dict[str, Any]]]:
         """
@@ -154,9 +154,9 @@ class HealthcareAPI(APIInfrastructure):
             Dict[str, List[Dict[str, Any]]]: Dictionary containing lists of different types of healthcare facilities
         """
         return {
-            'hospitals': self.get_hospitals(),
-            'mental_health_centers': self.get_mental_health_centers(),
-            'clinics': self.get_free_standing_clinics()
+            'hospitals': self.get_hospitals()['features'],
+            'mental_health_centers': self.get_mental_health_centers()['features'],
+            'clinics': self.get_free_standing_clinics()['features']
         }
 
     def get_healthcare_providers(self, 
@@ -232,52 +232,6 @@ class HealthcareAPI(APIInfrastructure):
             params=params
         )
         return response.json()
-
-    def get_mental_health_centers(self) -> List[Dict[str, Any]]:
-        """
-        Get mental health centers from the ArcGIS API.
-        
-        Returns:
-            List[Dict[str, Any]]: List of mental health centers with their details
-        """
-        url = "https://services.arcgis.com/8Pc9XBTAsYuxx9Ny/arcgis/rest/services/MentalHealthCenter_gdb/FeatureServer/0/query"
-        params = {
-            'outFields': '*',
-            'where': '1=1',
-            'f': 'geojson'
-        }
-        
-        try:
-            response = requests.get(url, params=params)
-            response.raise_for_status()
-            data = response.json()
-            return data.get('features', [])
-        except requests.exceptions.RequestException as e:
-            print(f"Error fetching mental health centers: {e}")
-            return []
-
-    def get_free_standing_clinics(self) -> List[Dict[str, Any]]:
-        """
-        Get free-standing clinics from the ArcGIS API.
-        
-        Returns:
-            List[Dict[str, Any]]: List of free-standing clinics with their details
-        """
-        url = "https://services.arcgis.com/8Pc9XBTAsYuxx9Ny/arcgis/rest/services/FreeStandingClinic_gdb/FeatureServer/0/query"
-        params = {
-            'outFields': '*',
-            'where': '1=1',
-            'f': 'geojson'
-        }
-        
-        try:
-            response = requests.get(url, params=params)
-            response.raise_for_status()
-            data = response.json()
-            return data.get('features', [])
-        except requests.exceptions.RequestException as e:
-            print(f"Error fetching free-standing clinics: {e}")
-            return []
 
 # Example usage:
 # healthcare_api = HealthcareAPI()
