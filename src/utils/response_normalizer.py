@@ -1,7 +1,12 @@
+"""
+Response Normalizer Module
+
+This module provides functions to standardize API responses across the application.
+"""
+
 from typing import Any, Dict, List, Optional, Union
 from dataclasses import dataclass
 from datetime import datetime
-from fastapi import status
 
 @dataclass
 class NormalizedResponse:
@@ -77,82 +82,40 @@ def is_valid_response(response: NormalizedResponse) -> bool:
     
     return True
 
-class APIResponse:
-    def __init__(
-        self,
-        success: bool,
-        message: str,
-        data: Optional[Union[Dict[str, Any], list, Any]] = None,
-        status_code: int = status.HTTP_200_OK,
-        error_code: Optional[str] = None
-    ):
-        self.success = success
-        self.message = message
-        self.data = data
-        self.status_code = status_code
-        self.error_code = error_code
-
-    def to_dict(self) -> Dict[str, Any]:
-        response = {
-            "success": self.success,
-            "message": self.message,
-        }
-        
-        if self.data is not None:
-            response["data"] = self.data
-            
-        if self.error_code is not None:
-            response["error_code"] = self.error_code
-            
-        return response
-
-def success_response(
-    message: str = "Operation successful",
-    data: Optional[Union[Dict[str, Any], list, Any]] = None,
-    status_code: int = status.HTTP_200_OK
-) -> Dict[str, Any]:
+def success_response(message: str, data: dict = None) -> dict:
     """
     Create a standardized success response.
     
     Args:
         message: Success message
-        data: Response data
-        status_code: HTTP status code
+        data: Optional data to include in the response
         
     Returns:
-        Dict containing the standardized response
+        Dict containing the standardized success response
     """
-    response = APIResponse(
-        success=True,
-        message=message,
-        data=data,
-        status_code=status_code
-    )
-    return response.to_dict()
+    response = {
+        'success': True,
+        'message': message
+    }
+    if data is not None:
+        response['data'] = data
+    return response
 
-def error_response(
-    message: str = "Operation failed",
-    status_code: int = status.HTTP_400_BAD_REQUEST,
-    error_code: Optional[str] = None,
-    data: Optional[Union[Dict[str, Any], list, Any]] = None
-) -> Dict[str, Any]:
+def error_response(message: str, error_code: str = None) -> dict:
     """
     Create a standardized error response.
     
     Args:
         message: Error message
-        status_code: HTTP status code
-        error_code: Optional error code for specific error types
-        data: Additional error data if needed
+        error_code: Optional error code
         
     Returns:
         Dict containing the standardized error response
     """
-    response = APIResponse(
-        success=False,
-        message=message,
-        data=data,
-        status_code=status_code,
-        error_code=error_code
-    )
-    return response.to_dict() 
+    response = {
+        'success': False,
+        'message': message
+    }
+    if error_code is not None:
+        response['error_code'] = error_code
+    return response 
