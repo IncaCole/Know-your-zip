@@ -30,7 +30,9 @@ class GeoDataAPI(APIInfrastructure):
         params = {
             'outFields': '*',
             'where': '1=1',
-            'f': 'geojson'
+            'f': 'geojson',
+            'outSR': '4326',  # WGS84 coordinate system
+            'geometryType': 'esriGeometryPolygon'
         }
         
         response = requests.get(self.flood_zones_url, params=params)
@@ -47,7 +49,9 @@ class GeoDataAPI(APIInfrastructure):
         params = {
             'outFields': '*',
             'where': '1=1',
-            'f': 'geojson'
+            'f': 'geojson',
+            'outSR': '4326',  # WGS84 coordinate system
+            'geometryType': 'esriGeometryPolyline'
         }
         
         response = requests.get(self.evacuation_routes_url, params=params)
@@ -64,7 +68,9 @@ class GeoDataAPI(APIInfrastructure):
         params = {
             'outFields': '*',
             'where': '1=1',
-            'f': 'geojson'
+            'f': 'geojson',
+            'outSR': '4326',  # WGS84 coordinate system
+            'geometryType': 'esriGeometryPolyline'
         }
         
         response = requests.get(self.bus_routes_url, params=params)
@@ -84,7 +90,9 @@ class GeoDataAPI(APIInfrastructure):
         params = {
             'outFields': '*',
             'where': f"ZIPCODE = '{zip_code}'",
-            'f': 'geojson'
+            'f': 'geojson',
+            'outSR': '4326',  # WGS84 coordinate system
+            'geometryType': 'esriGeometryPoint'
         }
         
         response = requests.get(self.bus_stops_url, params=params)
