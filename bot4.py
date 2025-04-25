@@ -1,6 +1,7 @@
 import streamlit as st
 from together import Together
 import os
+from dotenv import load_dotenv
 import pandas as pd
 from geopy.geocoders import Nominatim
 from geopy.distance import geodesic
@@ -14,8 +15,16 @@ from geo_data import GeoDataAPI
 import time
 from typing import Dict, Any, List, Optional
 
+# Load environment variables
+load_dotenv()
+
 # Initialize the Together client with your API key
-TOGETHER_API_KEY = "tgp_v1_iDEzFWxeK_DmiYCbTRjWy89gRflopp-1jHGRYZGI1o0"
+TOGETHER_API_KEY = os.getenv('TOGETHER_API_KEY', st.secrets.get("TOGETHER_API_KEY", ""))
+
+if not TOGETHER_API_KEY:
+    st.error("Together API key not found. Please set it in your environment variables or Streamlit secrets.")
+    st.stop()
+
 client = Together(api_key=TOGETHER_API_KEY)
 
 # Initialize session state variables
