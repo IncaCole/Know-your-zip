@@ -18,15 +18,15 @@ from typing import Dict, Any, List, Optional
 # Load environment variables
 load_dotenv()
 
-# Initialize the Together client with your API key
-TOGETHER_API_KEY = os.getenv('TOGETHER_API_KEY', st.secrets.get("TOGETHER_API_KEY", ""))
+# Get API key from environment or secrets
+api_key = os.getenv('TOGETHER_API_KEY', st.secrets.get("TOGETHER_API_KEY", ""))
 
-if not TOGETHER_API_KEY:
+if not api_key:
     st.error("Together API key not found. Please set it in your environment variables or Streamlit secrets.")
     st.stop()
 
-# Initialize the Together API
-together.api_key = TOGETHER_API_KEY
+# Set the API key as an environment variable
+os.environ['TOGETHER_API_KEY'] = api_key
 
 # Initialize session state variables
 if "messages" not in st.session_state:
@@ -94,6 +94,16 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
+
+def create_chat_prompt(system_content: str, messages: list) -> str:
+    """Create a formatted chat prompt from messages."""
+    prompt = f"System: {system_content}\n\n"
+    for msg in messages:
+        role = msg["role"].capitalize()
+        content = msg["content"]
+        prompt += f"{role}: {content}\n"
+    prompt += "Assistant: "
+    return prompt
 
 def main():
     # Title and description
@@ -379,16 +389,24 @@ def main():
                         if any(categories['geographic'].values()):
                             context += "Geographic data (flood zones, evacuation routes, bus routes) is available. "
                     
+                    # Create the chat prompt
+                    prompt = create_chat_prompt(
+                        f"You are a helpful AI assistant that knows about Miami-Dade County and its facilities. {context}",
+                        st.session_state.messages
+                    )
+
                     # Get response from the model
                     response = together.Complete.create(
-                        prompt=f"You are a helpful AI assistant that knows about Miami-Dade County and its facilities. {context}",
+                        prompt=prompt,
                         model="meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
                         max_tokens=1024,
                         temperature=0.7,
                     )
                     
+                    # Extract the response text
+                    bot_response = response.output.text.strip()
+                    
                     # Add bot response to chat history
-                    bot_response = response.choices[0].message.content
                     st.session_state.messages.append({"role": "assistant", "content": bot_response})
                     
                     # Rerun to update the chat display
