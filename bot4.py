@@ -1,5 +1,5 @@
 import streamlit as st
-from together import Together
+import together
 import os
 from dotenv import load_dotenv
 import pandas as pd
@@ -25,7 +25,8 @@ if not TOGETHER_API_KEY:
     st.error("Together API key not found. Please set it in your environment variables or Streamlit secrets.")
     st.stop()
 
-client = Together(api_key=TOGETHER_API_KEY)
+# Initialize the Together API
+together.api_key = TOGETHER_API_KEY
 
 # Initialize session state variables
 if "messages" not in st.session_state:
@@ -379,12 +380,9 @@ def main():
                             context += "Geographic data (flood zones, evacuation routes, bus routes) is available. "
                     
                     # Get response from the model
-                    response = client.chat.completions.create(
+                    response = together.Complete.create(
+                        prompt=f"You are a helpful AI assistant that knows about Miami-Dade County and its facilities. {context}",
                         model="meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
-                        messages=[
-                            {"role": "system", "content": f"You are a helpful AI assistant that knows about Miami-Dade County and its facilities. {context}"},
-                            *st.session_state.messages
-                        ],
                         max_tokens=1024,
                         temperature=0.7,
                     )

@@ -766,10 +766,11 @@ def main():
         )
         
         # Update center and zoom if map is moved
-        if map_data['center']:
-            st.session_state.map_center = convert_to_latlong(map_data['center'])
-        if map_data['zoom']:
-            st.session_state.zoom_level = map_data['zoom']
+        if map_data is not None:
+            if 'center' in map_data and map_data['center']:
+                st.session_state.map_center = convert_to_latlong(map_data['center'])
+            if 'zoom' in map_data and map_data['zoom']:
+                st.session_state.zoom_level = map_data['zoom']
 
 if __name__ == "__main__":
     main() 
