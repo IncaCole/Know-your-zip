@@ -404,7 +404,15 @@ def main():
                     )
                     
                     # Extract the response text
-                    bot_response = response.output.text.strip()
+                    if isinstance(response, dict) and 'output' in response:
+                        bot_response = response['output']['text'].strip()
+                    elif isinstance(response, dict) and 'choices' in response:
+                        bot_response = response['choices'][0]['text'].strip()
+                    else:
+                        bot_response = str(response).strip()
+                    
+                    # Remove any "Assistant:" prefix if present
+                    bot_response = bot_response.replace("Assistant:", "").strip()
                     
                     # Add bot response to chat history
                     st.session_state.messages.append({"role": "assistant", "content": bot_response})
