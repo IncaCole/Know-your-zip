@@ -26,6 +26,12 @@ if 'markers' not in st.session_state:
 if 'debug_info' not in st.session_state:
     st.session_state.debug_info = []
 
+# Initialize chat-related session state variables
+if 'messages' not in st.session_state:
+    st.session_state.messages = []
+if 'location_data' not in st.session_state:
+    st.session_state.location_data = None
+
 # Custom CSS for better navigation and layout
 st.markdown("""
 <style>
