@@ -16,6 +16,16 @@ st.set_page_config(
 if 'current_page' not in st.session_state:
     st.session_state.current_page = 'Dashboard'
 
+# Initialize map-related session state variables
+if 'map_center' not in st.session_state:
+    st.session_state.map_center = [25.7617, -80.1918]  # Miami-Dade County center coordinates
+if 'zoom_level' not in st.session_state:
+    st.session_state.zoom_level = 10
+if 'markers' not in st.session_state:
+    st.session_state.markers = []
+if 'debug_info' not in st.session_state:
+    st.session_state.debug_info = []
+
 # Custom CSS for better navigation and layout
 st.markdown("""
 <style>
