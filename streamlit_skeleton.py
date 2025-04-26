@@ -19,7 +19,22 @@ st.markdown("""
     .main .block-container {
         padding-top: 2rem;
         padding-bottom: 2rem;
-        background-color: #f8fafc;
+        background-color: #4682B4;  /* Steel Blue background */
+    }
+    
+    /* Section styling */
+    .stTabs [data-baseweb="tab-list"],
+    .stTabs [data-baseweb="tab"],
+    .card,
+    .stMetric,
+    .streamlit-expanderHeader,
+    .streamlit-expanderContent,
+    .stTextInput>div>div>input,
+    .stButton>button {
+        background-color: #FFFFFF !important;
+        border: 2px solid #1E3A8A !important;  /* Dark blue border */
+        border-radius: 8px;
+        margin-bottom: 1rem;
     }
     
     /* Tab styling */
@@ -58,7 +73,6 @@ st.markdown("""
         padding: 2rem;
         box-shadow: 0 4px 6px rgba(26, 86, 219, 0.1);
         transition: transform 0.3s ease;
-        border: 1px solid #e6f0ff;
     }
     
     .card:hover {
@@ -75,7 +89,6 @@ st.markdown("""
         background-color: #1a56db;
         color: white;
         transition: all 0.3s ease;
-        border: none;
     }
     
     .stButton>button:hover {
@@ -87,7 +100,6 @@ st.markdown("""
     .stTextInput>div>div>input {
         border-radius: 8px;
         padding: 0.5rem 1rem;
-        border: 1px solid #e6f0ff;
     }
     
     .stTextInput>div>div>input:focus {
@@ -101,7 +113,6 @@ st.markdown("""
         border-radius: 12px;
         padding: 1.5rem;
         box-shadow: 0 4px 6px rgba(26, 86, 219, 0.1);
-        border: 1px solid #e6f0ff;
     }
     
     /* Custom scrollbar */
@@ -164,7 +175,11 @@ st.markdown("""
         background-color: #ffffff;
         border-radius: 8px;
         padding: 1rem;
-        border: 1px solid #e6f0ff;
+    }
+
+    /* Text color for better contrast */
+    .stMarkdown, .stText {
+        color: #FFFFFF !important;
     }
 
     /* Mobile Responsive Design */
