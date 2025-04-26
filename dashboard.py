@@ -155,7 +155,6 @@ def main():
             return None, None, None
 
     # Display the overview section
-    st.header("📈 County-Wide Overview")
     with st.spinner("Loading county-wide data..."):
         overview_data = get_general_overview()
         if overview_data:
