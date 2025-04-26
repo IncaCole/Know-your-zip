@@ -58,7 +58,7 @@ st.markdown("""
     .title-text {
         margin: 0;
         font-family: "Source Sans Pro", sans-serif;
-        font-size: 5.25rem;
+        font-size: 4.5rem;
         font-weight: bold;
         line-height: 1.2;
     }
