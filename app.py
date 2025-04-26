@@ -58,16 +58,16 @@ st.markdown("""
     .title-text {
         margin: 0;
         font-family: "Source Sans Pro", sans-serif;
-        font-size: 3.5rem;
+        font-size: 5.25rem;
         font-weight: bold;
         line-height: 1.2;
     }
     /* Dark mode adjustments */
     [data-theme="dark"] .title-text {
-        color: #ffffff;
+        color: #2A3A40;
     }
     [data-theme="light"] .title-text {
-        color: rgb(49, 51, 63);
+        color: #2A3A40;
     }
     /* Logo container styling */
     .logo-container {
