@@ -10,6 +10,26 @@ from folium.plugins import MarkerCluster
 # Configure the page
 st.set_page_config(page_title="Miami County Map Viewer", layout="wide")
 
+# Add custom CSS for popup styling
+st.markdown("""
+<style>
+    .folium-popup-content {
+        color: #000000 !important;
+        background-color: #ffffff !important;
+    }
+    .folium-popup-content-wrapper {
+        background-color: #ffffff !important;
+    }
+    [data-theme="dark"] .folium-popup-content {
+        color: #ffffff !important;
+        background-color: #1e1e1e !important;
+    }
+    [data-theme="dark"] .folium-popup-content-wrapper {
+        background-color: #1e1e1e !important;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 # Initialize session state variables
 if 'map_center' not in st.session_state:
     st.session_state.map_center = [25.7617, -80.1918]  # Miami coordinates
