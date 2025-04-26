@@ -62,6 +62,9 @@ st.markdown("""
         font-weight: bold;
         line-height: 1.2;
     }
+    .title-text-line {
+        display: block;
+    }
     /* Dark mode adjustments */
     [data-theme="dark"] .title-text {
         color: #2A3A40;
@@ -111,7 +114,7 @@ with title_col1:
     st.image("assets/miami-logo-zip.png", width=180)  # Increased logo size
     st.markdown('</div>', unsafe_allow_html=True)
 with title_col2:
-    st.markdown('<p class="title-text">Miami-Dade County Explorer</p>', unsafe_allow_html=True)
+    st.markdown('<div class="title-text"><span class="title-text-line">Miami-Dade</span><span class="title-text-line">County Explorer</span></div>', unsafe_allow_html=True)
 
 # Create three columns for navigation buttons
 col1, col2, col3 = st.columns(3)
