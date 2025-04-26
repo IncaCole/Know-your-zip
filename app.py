@@ -12,27 +12,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Initialize session state for navigation
-if 'current_page' not in st.session_state:
-    st.session_state.current_page = 'Dashboard'
-
-# Initialize map-related session state variables
-if 'map_center' not in st.session_state:
-    st.session_state.map_center = [25.7617, -80.1918]  # Miami-Dade County center coordinates
-if 'zoom_level' not in st.session_state:
-    st.session_state.zoom_level = 10
-if 'markers' not in st.session_state:
-    st.session_state.markers = []
-if 'debug_info' not in st.session_state:
-    st.session_state.debug_info = []
-
-# Initialize chat-related session state variables
-if 'messages' not in st.session_state:
-    st.session_state.messages = []
-if 'location_data' not in st.session_state:
-    st.session_state.location_data = None
-
-# Custom CSS for better navigation and layout
+# Custom CSS for better navigation, layout and logo
 st.markdown("""
 <style>
     .stButton > button {
@@ -54,11 +34,63 @@ st.markdown("""
         padding: 1em;
         border-radius: 5px;
     }
+    .title-container {
+        display: flex;
+        align-items: center;
+        gap: 1em;
+    }
+    .title-text {
+        margin: 0;
+        font-family: "Source Sans Pro", sans-serif;
+        font-size: 2.25rem;
+    }
+    /* Dark mode adjustments */
+    [data-theme="dark"] .title-text {
+        color: #ffffff;
+    }
+    [data-theme="light"] .title-text {
+        color: rgb(49, 51, 63);
+    }
+    /* Logo container styling */
+    .logo-container {
+        background: white;
+        padding: 10px;
+        border-radius: 8px;
+    }
+    [data-theme="dark"] .logo-container {
+        background: white;  /* Keep white background in dark mode for logo visibility */
+    }
 </style>
 """, unsafe_allow_html=True)
 
-# Title and navigation
-st.title("🌴 Miami-Dade County Explorer")
+# Initialize session state for navigation
+if 'current_page' not in st.session_state:
+    st.session_state.current_page = 'Dashboard'
+
+# Initialize map-related session state variables
+if 'map_center' not in st.session_state:
+    st.session_state.map_center = [25.7617, -80.1918]  # Miami-Dade County center coordinates
+if 'zoom_level' not in st.session_state:
+    st.session_state.zoom_level = 10
+if 'markers' not in st.session_state:
+    st.session_state.markers = []
+if 'debug_info' not in st.session_state:
+    st.session_state.debug_info = []
+
+# Initialize chat-related session state variables
+if 'messages' not in st.session_state:
+    st.session_state.messages = []
+if 'location_data' not in st.session_state:
+    st.session_state.location_data = None
+
+# Title with logo
+title_col1, title_col2 = st.columns([1, 4])
+with title_col1:
+    st.markdown('<div class="logo-container">', unsafe_allow_html=True)
+    st.image("assets/miami-logo-zip.png", width=100)
+    st.markdown('</div>', unsafe_allow_html=True)
+with title_col2:
+    st.markdown('<p class="title-text">Miami-Dade County Explorer</p>', unsafe_allow_html=True)
 
 # Create three columns for navigation buttons
 col1, col2, col3 = st.columns(3)
