@@ -121,7 +121,7 @@ col1, col2, col3 = st.columns(3)
 
 # Navigation buttons with active state
 with col1:
-    if st.button('<img src="assets/chart-icon.png" style="width: 20px; height: 20px; vertical-align: middle;"> Dashboard', key="dash_btn", 
+    if st.button("📊 Dashboard", key="dash_btn", 
                  help="View county-wide analytics and insights",
                  use_container_width=True):
         st.session_state.current_page = 'Dashboard'
