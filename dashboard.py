@@ -34,10 +34,6 @@ apis = get_apis()
 zip_validator = get_zip_validator()
 
 def main():
-    # Title and description
-    st.title("📊 Miami-Dade County Analytics Dashboard")
-    st.write("Explore county-wide statistics and get detailed local insights")
-
     def get_general_overview():
         """Collect and analyze general data for Miami-Dade County"""
         try:
