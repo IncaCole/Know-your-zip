@@ -15,6 +15,21 @@ st.set_page_config(
 # Custom CSS for better navigation, layout and logo
 st.markdown("""
 <style>
+    /* Global background color */
+    .stApp {
+        background-color: #C2EAE7;
+    }
+    
+    /* Make sure content areas match the background */
+    .main .block-container {
+        background-color: #C2EAE7;
+    }
+
+    /* Ensure sidebar also matches */
+    .css-1d391kg {
+        background-color: #C2EAE7;
+    }
+
     .stButton > button {
         width: 100%;
         border-radius: 5px;
