@@ -37,12 +37,15 @@ st.markdown("""
     .title-container {
         display: flex;
         align-items: center;
-        gap: 1em;
+        gap: 2em;
+        margin: 1em 0;
     }
     .title-text {
         margin: 0;
         font-family: "Source Sans Pro", sans-serif;
-        font-size: 2.25rem;
+        font-size: 3.5rem;
+        font-weight: bold;
+        line-height: 1.2;
     }
     /* Dark mode adjustments */
     [data-theme="dark"] .title-text {
@@ -54,8 +57,11 @@ st.markdown("""
     /* Logo container styling */
     .logo-container {
         background: white;
-        padding: 10px;
-        border-radius: 8px;
+        padding: 15px;
+        border-radius: 12px;
+        min-width: 200px;
+        display: flex;
+        justify-content: center;
     }
     [data-theme="dark"] .logo-container {
         background: white;  /* Keep white background in dark mode for logo visibility */
@@ -84,10 +90,10 @@ if 'location_data' not in st.session_state:
     st.session_state.location_data = None
 
 # Title with logo
-title_col1, title_col2 = st.columns([1, 4])
+title_col1, title_col2 = st.columns([1, 3])  # Adjusted ratio for bigger logo
 with title_col1:
     st.markdown('<div class="logo-container">', unsafe_allow_html=True)
-    st.image("assets/miami-logo-zip.png", width=100)
+    st.image("assets/miami-logo-zip.png", width=180)  # Increased logo size
     st.markdown('</div>', unsafe_allow_html=True)
 with title_col2:
     st.markdown('<p class="title-text">Miami-Dade County Explorer</p>', unsafe_allow_html=True)
