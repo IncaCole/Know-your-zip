@@ -17,17 +17,17 @@ st.markdown("""
 <style>
     /* Global background color */
     .stApp {
-        background-color: #9ED4D2;
+        background-color: transparent;
     }
     
     /* Make sure content areas match the background */
     .main .block-container {
-        background-color: #9ED4D2;
+        background-color: transparent;
     }
 
     /* Ensure sidebar also matches */
     .css-1d391kg {
-        background-color: #9ED4D2;
+        background-color: transparent;
     }
 
     .stButton > button {
