@@ -287,9 +287,6 @@ with col1:
     # Search radius
     radius = st.slider("Search radius (miles)", 1.0, 20.0, 5.0)
 
-    # Debug mode
-    show_debug = st.checkbox("Show Debug Info", value=False)
-
     if st.button("Find Nearby Locations"):
         # Clear previous debug info
         st.session_state.debug_info = []
@@ -538,12 +535,6 @@ with col1:
                                 
                     except Exception as e:
                         add_debug_info("Infrastructure", f"Error fetching infrastructure facilities: {str(e)}")
-            
-            # Show debug information if enabled
-            if show_debug and st.session_state.debug_info:
-                with st.expander("Debug Information"):
-                    for info in st.session_state.debug_info:
-                        st.write(info)
             
             # Show summary of found locations
             st.success(f"Found {len(st.session_state.markers) - 1} locations within {radius} miles")
