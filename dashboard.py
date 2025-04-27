@@ -33,63 +33,6 @@ apis = get_apis()
 zip_validator = get_zip_validator()
 
 def main():
-    def get_general_overview():
-        """Collect and analyze general data for Miami-Dade County"""
-        try:
-            # Get all valid Miami-Dade ZIP codes from the validator
-            valid_zips = zip_validator.get_all_zip_codes()
-            
-            # Initialize counters
-            public_count = 0
-            private_count = 0
-            charter_count = 0
-            
-            # Get schools for each ZIP code
-            for zip_code in valid_zips:
-                # Get public schools
-                schools = apis['Education'].get_schools_by_zip(zip_code, 'public')
-                if schools and schools.get('success'):
-                    public_count += len(schools['data'].get('schools', []))
-                
-                # Get private schools
-                schools = apis['Education'].get_schools_by_zip(zip_code, 'private')
-                if schools and schools.get('success'):
-                    private_count += len(schools['data'].get('schools', []))
-                
-                # Get charter schools
-                schools = apis['Education'].get_schools_by_zip(zip_code, 'charter')
-                if schools and schools.get('success'):
-                    charter_count += len(schools['data'].get('schools', []))
-            
-            # Healthcare Overview - using the working pattern from map4.py
-            hospitals = apis['Healthcare'].get_hospitals()
-            mental_health = apis['Healthcare'].get_mental_health_centers()
-            clinics = apis['Healthcare'].get_free_standing_clinics()
-            
-            # Emergency Services Overview - using the working pattern from map4.py
-            police_stations = apis['Emergency'].get_police_stations()
-            fire_stations = apis['Emergency'].get_fire_stations()
-            
-            return {
-                'education': {
-                    'public_count': public_count,
-                    'private_count': private_count,
-                    'charter_count': charter_count
-                },
-                'healthcare': {
-                    'hospitals_count': len(hospitals.get('features', [])),
-                    'mental_health_count': len(mental_health.get('features', [])),
-                    'clinics_count': len(clinics.get('features', []))
-                },
-                'emergency': {
-                    'police_count': len(police_stations.get('features', [])),
-                    'fire_count': len(fire_stations.get('features', []))
-                }
-            }
-        except Exception as e:
-            st.error(f"Error loading overview data: {str(e)}")
-            return None
-
     # Create two columns for controls and main content
     control_col, main_col = st.columns([1, 3])
 
