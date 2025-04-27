@@ -45,28 +45,60 @@ st.markdown("""
     }
 
     [data-theme="dark"] .stTextInput input {
-        color: #FFFFFF;
-        background-color: rgba(255, 255, 255, 0.1);
+        color: #000000 !important;
+        background-color: #FFFFFF;
     }
 
     [data-theme="dark"] .stTextInput label {
         color: #FFFFFF;
     }
 
-    [data-theme="dark"] .stCheckbox label {
+    /* Keep text black in interactive elements for both modes */
+    .stTextInput input,
+    .stSelectbox select,
+    .stMultiSelect select,
+    .stTextArea textarea {
+        color: #000000 !important;
+        background-color: #FFFFFF !important;
+    }
+
+    /* Style for dropdown options */
+    .stSelectbox option,
+    .stMultiSelect option {
+        color: #000000 !important;
+        background-color: #FFFFFF !important;
+    }
+
+    /* Ensure text in number inputs stays black */
+    input[type="number"] {
+        color: #000000 !important;
+        background-color: #FFFFFF !important;
+    }
+
+    /* Keep slider values visible */
+    .stSlider [data-baseweb="slider"] {
+        color: #000000 !important;
+    }
+
+    /* Keep radio button and checkbox text black when selected */
+    .stRadio label,
+    .stCheckbox label {
+        color: inherit !important;
+    }
+
+    [data-theme="dark"] .stRadio label span,
+    [data-theme="dark"] .stCheckbox label span {
         color: #FFFFFF !important;
     }
 
-    [data-theme="dark"] .stSlider label {
+    /* Keep text in interactive widgets black */
+    [data-theme="dark"] .stWidgetLabel {
         color: #FFFFFF;
     }
 
-    [data-theme="dark"] .stSubheader {
-        color: #FFFFFF;
-    }
-
-    [data-theme="dark"] p {
-        color: #FFFFFF;
+    [data-theme="dark"] .stWidget {
+        color: #000000 !important;
+        background-color: #FFFFFF !important;
     }
 
     /* Global background color */
