@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import plotly.express as px
 from education import EducationAPI
 from healthcare import HealthcareAPI
 from emergency_services import EmergencyServicesAPI
