@@ -16,6 +16,59 @@ st.set_page_config(
 # Custom CSS for better navigation, layout and logo
 st.markdown("""
 <style>
+    /* Global text color adjustments for dark mode */
+    [data-theme="dark"] {
+        color: #FFFFFF;
+    }
+
+    [data-theme="dark"] .stButton > button {
+        color: #2A3A40;
+        background-color: #f0f2f6;
+    }
+
+    [data-theme="dark"] .stButton > button:hover {
+        color: white;
+        background-color: #4CAF50;
+    }
+
+    [data-theme="dark"] div[data-testid="stVerticalBlock"] > div:has(div.stButton) {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Dark mode text adjustments */
+    [data-theme="dark"] .title-text {
+        color: #FFFFFF;
+    }
+
+    [data-theme="dark"] .stMarkdown {
+        color: #FFFFFF;
+    }
+
+    [data-theme="dark"] .stTextInput input {
+        color: #FFFFFF;
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    [data-theme="dark"] .stTextInput label {
+        color: #FFFFFF;
+    }
+
+    [data-theme="dark"] .stCheckbox label {
+        color: #FFFFFF !important;
+    }
+
+    [data-theme="dark"] .stSlider label {
+        color: #FFFFFF;
+    }
+
+    [data-theme="dark"] .stSubheader {
+        color: #FFFFFF;
+    }
+
+    [data-theme="dark"] p {
+        color: #FFFFFF;
+    }
+
     /* Global background color */
     .stApp {
         background-color: transparent;
@@ -83,16 +136,14 @@ st.markdown("""
         font-weight: bold;
         line-height: 1.2;
         text-align: center;
+        color: #2A3A40;
     }
 
     .title-text-line {
         display: block;
     }
 
-    /* Dark mode adjustments */
-    [data-theme="dark"] .title-text {
-        color: #2A3A40;
-    }
+    /* Light mode specific colors */
     [data-theme="light"] .title-text {
         color: #2A3A40;
     }
