@@ -1,5 +1,4 @@
 import streamlit as st
-import plotly.express as px
 import pandas as pd
 from education import EducationAPI
 from healthcare import HealthcareAPI
@@ -90,83 +89,6 @@ def main():
         except Exception as e:
             st.error(f"Error loading overview data: {str(e)}")
             return None
-
-    def create_charts(data):
-        """Create charts from the overview data"""
-        try:
-            # Education Distribution Pie Chart
-            education_data = pd.DataFrame({
-                'School Type': ['Public Schools', 'Private Schools', 'Charter Schools'],
-                'Count': [
-                    data['education']['public_count'],
-                    data['education']['private_count'],
-                    data['education']['charter_count']
-                ]
-            })
-            
-            education_fig = px.pie(
-                education_data,
-                values='Count',
-                names='School Type',
-                title='School Distribution by Type',
-                color_discrete_sequence=px.colors.qualitative.Set3
-            )
-            
-            # Healthcare Bar Chart
-            healthcare_data = pd.DataFrame({
-                'Facility Type': ['Hospitals', 'Mental Health Centers', 'Clinics'],
-                'Count': [
-                    data['healthcare']['hospitals_count'],
-                    data['healthcare']['mental_health_count'],
-                    data['healthcare']['clinics_count']
-                ]
-            })
-            
-            healthcare_fig = px.bar(
-                healthcare_data,
-                x='Facility Type',
-                y='Count',
-                title='Healthcare Facilities Distribution',
-                color='Facility Type',
-                color_discrete_sequence=px.colors.qualitative.Set2
-            )
-            
-            # Emergency Services Bar Chart
-            emergency_data = pd.DataFrame({
-                'Service Type': ['Police Stations', 'Fire Stations'],
-                'Count': [
-                    data['emergency']['police_count'],
-                    data['emergency']['fire_count']
-                ]
-            })
-            
-            emergency_fig = px.bar(
-                emergency_data,
-                x='Service Type',
-                y='Count',
-                title='Emergency Services Distribution',
-                color='Service Type',
-                color_discrete_sequence=px.colors.qualitative.Set1
-            )
-            
-            return education_fig, healthcare_fig, emergency_fig
-        except Exception as e:
-            st.error(f"Error creating charts: {str(e)}")
-            return None, None, None
-
-    # Display the overview section
-    with st.spinner("Loading county-wide data..."):
-        overview_data = get_general_overview()
-        if overview_data:
-            education_fig, healthcare_fig, emergency_fig = create_charts(overview_data)
-            if education_fig and healthcare_fig and emergency_fig:
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    st.plotly_chart(education_fig, use_container_width=True)
-                with col2:
-                    st.plotly_chart(healthcare_fig, use_container_width=True)
-                with col3:
-                    st.plotly_chart(emergency_fig, use_container_width=True)
 
     # Create two columns for controls and main content
     control_col, main_col = st.columns([1, 3])
