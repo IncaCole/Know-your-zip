@@ -8,8 +8,9 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 # Set page config - MUST BE THE FIRST STREAMLIT COMMAND
 st.set_page_config(
     page_title="Miami-Dade County Explorer",
-    page_icon="🌴",
-    layout="wide"
+    page_icon="��",
+    layout="wide",
+    initial_sidebar_state="collapsed"
 )
 
 # Custom CSS for better navigation, layout and logo
@@ -23,6 +24,10 @@ st.markdown("""
     /* Make sure content areas match the background */
     .main .block-container {
         background-color: transparent;
+        padding-top: 1rem;
+        padding-right: 1rem;
+        padding-left: 1rem;
+        padding-bottom: 1rem;
     }
 
     /* Ensure sidebar also matches */
@@ -30,41 +35,60 @@ st.markdown("""
         background-color: transparent;
     }
 
+    /* Responsive button styling */
     .stButton > button {
         width: 100%;
         border-radius: 5px;
         height: 3em;
         background-color: #f0f2f6;
+        margin: 0.2rem 0;
+        padding: 0.5rem;
+        white-space: normal;
+        word-wrap: break-word;
     }
+    
     .stButton > button:hover {
         background-color: #4CAF50;
         color: white;
     }
+    
     .stButton > button[data-selected="true"] {
         background-color: #4CAF50;
         color: white;
     }
+
+    /* Responsive container for buttons */
     div[data-testid="stVerticalBlock"] > div:has(div.stButton) {
         background-color: white;
-        padding: 1em;
+        padding: 0.5rem;
         border-radius: 5px;
+        margin: 0.2rem 0;
     }
+
+    /* Responsive title container */
     .title-container {
         display: flex;
+        flex-direction: column;
         align-items: center;
-        gap: 2em;
-        margin: 1em 0;
+        gap: 1rem;
+        margin: 0.5rem 0;
+        padding: 0.5rem;
     }
+
+    /* Responsive title text */
     .title-text {
         margin: 0;
         font-family: "Source Sans Pro", sans-serif;
-        font-size: 4.5rem;
+        font-size: calc(2rem + 2vw);
         font-weight: bold;
         line-height: 1.2;
+        text-align: center;
     }
+
     .title-text-line {
         display: block;
     }
+
     /* Dark mode adjustments */
     [data-theme="dark"] .title-text {
         color: #2A3A40;
@@ -72,17 +96,56 @@ st.markdown("""
     [data-theme="light"] .title-text {
         color: #2A3A40;
     }
-    /* Logo container styling */
+
+    /* Responsive logo container */
     .logo-container {
         background: white;
-        padding: 15px;
+        padding: 0.8rem;
         border-radius: 12px;
-        min-width: 200px;
+        width: min(200px, 80%);
+        margin: 0 auto;
         display: flex;
         justify-content: center;
     }
+
     [data-theme="dark"] .logo-container {
-        background: white;  /* Keep white background in dark mode for logo visibility */
+        background: white;
+    }
+
+    /* Make columns more responsive */
+    div[data-testid="column"] {
+        padding: 0.5rem !important;
+    }
+
+    /* Responsive text inputs */
+    .stTextInput input {
+        width: 100%;
+    }
+
+    /* Adjust spacing for mobile */
+    @media (max-width: 640px) {
+        .main .block-container {
+            padding: 0.5rem;
+        }
+
+        .title-text {
+            font-size: calc(1.5rem + 1.5vw);
+        }
+
+        .logo-container {
+            width: 60%;
+            padding: 0.5rem;
+        }
+
+        div[data-testid="column"] {
+            padding: 0.3rem !important;
+        }
+
+        .stButton > button {
+            height: auto;
+            min-height: 3em;
+            font-size: 0.9rem;
+        }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -108,16 +171,16 @@ if 'location_data' not in st.session_state:
     st.session_state.location_data = None
 
 # Title with logo
-title_col1, title_col2 = st.columns([1, 3])  # Adjusted ratio for bigger logo
+title_col1, title_col2 = st.columns([1, 2])  # Adjusted ratio for better mobile display
 with title_col1:
     st.markdown('<div class="logo-container">', unsafe_allow_html=True)
-    st.image("assets/miami-logo-zip.png", width=180)  # Increased logo size
+    st.image("assets/miami-logo-zip.png", use_column_width=True)  # Make image responsive
     st.markdown('</div>', unsafe_allow_html=True)
 with title_col2:
     st.markdown('<div class="title-text"><span class="title-text-line">Miami-Dade</span><span class="title-text-line">County Explorer</span></div>', unsafe_allow_html=True)
 
-# Create three columns for navigation buttons
-col1, col2, col3 = st.columns(3)
+# Create three columns for navigation buttons with adjusted ratios
+col1, col2, col3 = st.columns([1, 1, 1])  # Equal width columns for better mobile display
 
 # Navigation buttons with active state
 with col1:
