@@ -399,55 +399,15 @@ def get_schools_by_grade():
 
 def plot_schools_by_grade():
     """
-    Creates and returns a line chart showing the distribution of schools across grade levels
+    Displays a table showing the count of schools for each type (Private, Public, Charter)
     """
     df = get_schools_by_grade()
-    # Ensure all grade levels and school types are present
-    all_grades = ['PK', 'K'] + [str(i) for i in range(1, 13)]
-    school_types = ['Public', 'Private', 'Charter']
-    idx = pd.MultiIndex.from_product([all_grades, school_types], names=['Grade_Level', 'School_Type'])
-    df_grouped = df.groupby(['Grade_Level', 'School_Type'])['School_Count'].sum().reindex(idx, fill_value=0).reset_index()
-    # Plot
-    fig = px.line(
-        df_grouped,
-        x='Grade_Level',
-        y='School_Count',
-        color='School_Type',
-        title='School Distribution by Grade Level',
-        labels={
-            'Grade_Level': 'Grade Level',
-            'School_Count': 'Number of Schools',
-            'School_Type': 'School Type'
-        },
-        color_discrete_map={
-            'Public': '#1f77b4',
-            'Private': '#ff7f0e',
-            'Charter': '#2ca02c'
-        }
-    )
-    fig.update_layout(
-        xaxis_title='Grade Level',
-        yaxis_title='Number of Schools',
-        showlegend=True,
-        title={
-            'text': 'School Distribution by Grade Level',
-            'y': 0.95,
-            'x': 0.5,
-            'xanchor': 'center',
-            'yanchor': 'top',
-            'font': {'size': 24}
-        },
-        legend=dict(
-            title='School Type',
-            yanchor="top",
-            y=0.99,
-            xanchor="left",
-            x=1.05
-        )
-    )
-    fig.update_traces(
-        line=dict(width=3),
-        mode='lines+markers',
-        marker=dict(size=8)
-    )
-    return fig 
+    # Group by school type and count
+    summary = df.groupby('School_Type').size().reset_index(name='Count')
+    # Ensure all types are present
+    for t in ['Public', 'Private', 'Charter']:
+        if t not in summary['School_Type'].values:
+            summary = pd.concat([summary, pd.DataFrame({'School_Type': [t], 'Count': [0]})], ignore_index=True)
+    summary = summary.sort_values('School_Type')
+    st.subheader('School Counts by Type')
+    st.table(summary) 
