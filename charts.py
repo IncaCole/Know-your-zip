@@ -259,11 +259,11 @@ def plot_county_regions():
         name='Miami-Dade County'
     ))
     
-    # Add region labels with park statistics
+    # Add region labels with statistics
     region_labels = [
-        dict(text="NE<br>118 parks (18%)", lat=25.85, lon=-80.20),  # Northeast
-        dict(text="SE<br>77 parks (12%)", lat=25.25, lon=-80.20),   # Southeast
-        dict(text="SW<br>452 parks (70%)", lat=25.25, lon=-80.75)   # Southwest
+        dict(text="NE<br>118 (18%)", lat=25.85, lon=-80.20),  # Northeast
+        dict(text="SE<br>77 (12%)", lat=25.25, lon=-80.20),   # Southeast
+        dict(text="SW<br>452 (70%)", lat=25.25, lon=-80.75)   # Southwest
     ]
     
     for label in region_labels:
@@ -279,7 +279,7 @@ def plot_county_regions():
     # Update layout
     fig.update_layout(
         title={
-            'text': 'Miami-Dade County Regions - Park Distribution',
+            'text': 'Miami-Dade County Regions',
             'y': 0.95,
             'x': 0.5,
             'xanchor': 'center',
