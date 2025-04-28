@@ -75,6 +75,25 @@ def plot_schools_histogram():
         showlegend=False
     )
     
+    # Add text labels above each bar
+    for bar in fig.data:
+        y_data = bar.y
+        x_data = bar.x
+        fig.add_traces(
+            px.scatter(
+                x=x_data,
+                y=y_data,
+                text=y_data
+            ).update_traces(
+                mode='text',
+                textposition='top center',
+                showlegend=False,
+                textfont=dict(size=14),
+                hovertemplate=None,
+                hoverinfo='skip'
+            ).data
+        )
+    
     return fig
 
 def plot_schools_by_type():
