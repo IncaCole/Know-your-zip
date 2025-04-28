@@ -257,4 +257,68 @@ class ZIPValidator:
         except Exception as e:
             print(f"Error checking point in ZIP {zip_code}: {str(e)}")
         
-        return False 
+        return False
+
+    def get_zip_geojson(self) -> dict:
+        """
+        Get a GeoJSON object containing all ZIP code boundaries.
+        
+        Returns:
+            dict: GeoJSON object with all ZIP code boundaries
+        """
+        features = []
+        for zip_code, data in self.zip_database.items():
+            if 'geometry' in data:
+                feature = {
+                    'type': 'Feature',
+                    'properties': {
+                        'ZIP_Code': zip_code
+                    },
+                    'geometry': data['geometry']
+                }
+                features.append(feature)
+        
+        return {
+            'type': 'FeatureCollection',
+            'features': features
+        }
+
+    def get_closest_zip(self, coordinates: Tuple[float, float]) -> Optional[str]:
+        """
+        Find the closest ZIP code to the given coordinates.
+        
+        Args:
+            coordinates (Tuple[float, float]): (latitude, longitude) coordinates
+            
+        Returns:
+            Optional[str]: The closest ZIP code if found, None otherwise
+        """
+        if not coordinates or len(coordinates) != 2:
+            return None
+            
+        lat, lon = coordinates
+        # Check if coordinates are within Miami-Dade County bounds (with some padding)
+        if not (24.8 <= lat <= 26.2 and -81.0 <= lon <= -79.8):
+            return None
+            
+        closest_zip = None
+        min_distance = float('inf')
+        
+        for zip_code, data in self.zip_database.items():
+            if 'center' not in data:
+                continue
+                
+            zip_center = data['center']
+            try:
+                distance = geodesic(coordinates, zip_center).miles
+                if distance < min_distance:
+                    min_distance = distance
+                    closest_zip = zip_code
+            except Exception as e:
+                print(f"Error calculating distance for ZIP {zip_code}: {str(e)}")
+                continue
+        
+        # Only return if we found a reasonably close ZIP code (within 10 miles)
+        if closest_zip and min_distance <= 10:
+            return closest_zip
+        return None 

@@ -7,9 +7,11 @@ from emergency_services import EmergencyServicesAPI
 from geo_data import GeoDataAPI
 from src.zip_validator import ZIPValidator
 from geopy.geocoders import Nominatim
+from geopy.exc import GeocoderTimedOut, GeocoderServiceError
 from geopy.distance import geodesic
 from infrastructure import BusStopsAPI, LibrariesAPI, ParksAPI
-from charts import plot_schools_histogram, plot_fire_station_proximity_pie, plot_zip_park_density_treemap, plot_bus_stop_distance_heatmap
+from charts import plot_schools_histogram, plot_fire_station_proximity_pie, plot_zip_park_density_treemap
+import time
 
 def categorize_location(lat: float, lon: float) -> str:
     """
@@ -104,9 +106,6 @@ def main():
     with col3:
         st.plotly_chart(plot_zip_park_density_treemap(), use_container_width=True)
     
-    # Add bus stop distance heat map below the school distribution bar graph
-    st.plotly_chart(plot_bus_stop_distance_heatmap(), use_container_width=True)
-    
     # Create two columns for controls and main content
     control_col, main_col = st.columns([1, 3])
 
@@ -178,29 +177,95 @@ def main():
                                 }
                             }
                             
-                            # Get schools
-                            nearby_zips = zip_validator.get_nearby_zips(location_input, radius)
-                            for zip_code in nearby_zips:
-                                if show_public_schools:
-                                    schools = apis['Education'].get_schools_by_zip(zip_code, 'public')
-                                    if schools and schools.get('success'):
-                                        for school in schools['data'].get('schools', []):
-                                            school['school_type'] = 'public'
-                                            nearby_data['schools'].append(school)
-                                
-                                if show_private_schools:
-                                    schools = apis['Education'].get_schools_by_zip(zip_code, 'private')
-                                    if schools and schools.get('success'):
-                                        for school in schools['data'].get('schools', []):
-                                            school['school_type'] = 'private'
-                                            nearby_data['schools'].append(school)
-                                
-                                if show_charter_schools:
-                                    schools = apis['Education'].get_schools_by_zip(zip_code, 'charter')
-                                    if schools and schools.get('success'):
-                                        for school in schools['data'].get('schools', []):
-                                            school['school_type'] = 'charter'
-                                            nearby_data['schools'].append(school)
+                            # Get schools from nearby ZIP codes
+                            try:
+                                # First, find the closest ZIP code to the coordinates
+                                closest_zip = zip_validator.get_closest_zip(coordinates)
+                                if closest_zip:
+                                    st.success(f"Found closest ZIP code: {closest_zip}")
+                                    nearby_zips = zip_validator.get_nearby_zips(closest_zip, radius)
+                                    if nearby_zips:
+                                        st.success(f"Found {len(nearby_zips)} nearby ZIP codes: {', '.join(nearby_zips)}")
+                                        school_count = 0
+                                        
+                                        # Get schools from each nearby ZIP code
+                                        for zip_code in nearby_zips:
+                                            if show_public_schools:
+                                                try:
+                                                    schools = apis['Education'].get_schools_by_zip(zip_code, 'public')
+                                                    st.write(f"Debug - Public schools response: {schools}")  # Debug log
+                                                    if schools and schools.get('success'):
+                                                        for school in schools.get('data', {}).get('schools', []):
+                                                            # Calculate distance to school
+                                                            if 'geometry' in school and school['geometry']:
+                                                                school_coords = school['geometry']['coordinates']
+                                                                st.write(f"Debug - School coordinates for {school['NAME']}: {school_coords}")  # Debug log
+                                                                school_coords = (school_coords[1], school_coords[0])  # Convert to (lat, lon)
+                                                                distance = geodesic(coordinates, school_coords).miles
+                                                                st.write(f"Debug - Distance to {school['NAME']}: {distance} miles")  # Debug log
+                                                                if distance <= radius:
+                                                                    school['school_type'] = 'public'
+                                                                    nearby_data['schools'].append(school)
+                                                                    school_count += 1
+                                                            else:
+                                                                st.warning(f"No geometry data for school: {school['NAME']}")  # Debug log
+                                                except Exception as e:
+                                                    st.warning(f"Error fetching public schools for ZIP {zip_code}: {str(e)}")
+                                            
+                                            if show_private_schools:
+                                                try:
+                                                    schools = apis['Education'].get_schools_by_zip(zip_code, 'private')
+                                                    st.write(f"Debug - Private schools response: {schools}")  # Debug log
+                                                    if schools and schools.get('success'):
+                                                        for school in schools.get('data', {}).get('schools', []):
+                                                            # Calculate distance to school
+                                                            if 'geometry' in school and school['geometry']:
+                                                                school_coords = school['geometry']['coordinates']
+                                                                st.write(f"Debug - School coordinates for {school['NAME']}: {school_coords}")  # Debug log
+                                                                school_coords = (school_coords[1], school_coords[0])  # Convert to (lat, lon)
+                                                                distance = geodesic(coordinates, school_coords).miles
+                                                                st.write(f"Debug - Distance to {school['NAME']}: {distance} miles")  # Debug log
+                                                                if distance <= radius:
+                                                                    school['school_type'] = 'private'
+                                                                    nearby_data['schools'].append(school)
+                                                                    school_count += 1
+                                                            else:
+                                                                st.warning(f"No geometry data for school: {school['NAME']}")  # Debug log
+                                                except Exception as e:
+                                                    st.warning(f"Error fetching private schools for ZIP {zip_code}: {str(e)}")
+                                            
+                                            if show_charter_schools:
+                                                try:
+                                                    schools = apis['Education'].get_schools_by_zip(zip_code, 'charter')
+                                                    st.write(f"Debug - Charter schools response: {schools}")  # Debug log
+                                                    if schools and schools.get('success'):
+                                                        for school in schools.get('data', {}).get('schools', []):
+                                                            # Calculate distance to school
+                                                            if 'geometry' in school and school['geometry']:
+                                                                school_coords = school['geometry']['coordinates']
+                                                                st.write(f"Debug - School coordinates for {school['NAME']}: {school_coords}")  # Debug log
+                                                                school_coords = (school_coords[1], school_coords[0])  # Convert to (lat, lon)
+                                                                distance = geodesic(coordinates, school_coords).miles
+                                                                st.write(f"Debug - Distance to {school['NAME']}: {distance} miles")  # Debug log
+                                                                if distance <= radius:
+                                                                    school['school_type'] = 'charter'
+                                                                    nearby_data['schools'].append(school)
+                                                                    school_count += 1
+                                                            else:
+                                                                st.warning(f"No geometry data for school: {school['NAME']}")  # Debug log
+                                                except Exception as e:
+                                                    st.warning(f"Error fetching charter schools for ZIP {zip_code}: {str(e)}")
+                                        
+                                        if school_count == 0:
+                                            st.warning("No schools found within the specified radius")
+                                        else:
+                                            st.success(f"Found {school_count} schools within {radius} miles")
+                                    else:
+                                        st.warning(f"No nearby ZIP codes found within {radius} miles")
+                                else:
+                                    st.warning("Could not find closest ZIP code for the given coordinates")
+                            except Exception as e:
+                                st.error(f"Error retrieving school data: {str(e)}")
                             
                             # Get healthcare facilities
                             if show_hospitals:
@@ -423,15 +488,375 @@ def main():
                                             len(nearby_data['healthcare']),
                                             help="Number of healthcare facilities in your area")
                 else:
-                    # Handle address input
-                    geolocator = Nominatim(user_agent="miami_explorer")
-                    location = geolocator.geocode(location_input)
-                    if location:
-                        st.success(f"Found location: ({location.latitude}, {location.longitude})")
-                        coordinates = (location.latitude, location.longitude)
-                        # Add same analysis as above but using location coordinates
-                    else:
-                        st.error("Could not find the specified address")
+                    # Handle address input with improved geocoding
+                    try:
+                        geolocator = Nominatim(user_agent="miami_explorer", timeout=10)
+                        
+                        # Add retry mechanism for geocoding
+                        def do_geocode(address, attempt=1, max_attempts=3):
+                            try:
+                                # First try with Miami-Dade County, FL
+                                location = geolocator.geocode(f"{address}, Miami-Dade County, FL")
+                                
+                                # If that fails, try with just Miami, FL
+                                if not location:
+                                    location = geolocator.geocode(f"{address}, Miami, FL")
+                                    
+                                if location:
+                                    lat, lon = location.latitude, location.longitude
+                                    # Check if coordinates are within Miami-Dade County (with padding)
+                                    if 24.5 <= lat <= 26.5 and -81.5 <= lon <= -79.5:
+                                        return location
+                                    else:
+                                        st.warning(f"Location found ({lat}, {lon}) is outside Miami-Dade County bounds")
+                                        return None
+                                else:
+                                    st.warning(f"Could not find location for address: {address}")
+                                    return None
+                            except (GeocoderTimedOut, GeocoderServiceError) as e:
+                                if attempt <= max_attempts:
+                                    time.sleep(1)  # Add a small delay between retries
+                                    return do_geocode(address, attempt + 1, max_attempts)
+                                else:
+                                    st.error(f"Geocoding service error: {str(e)}")
+                                    return None
+                            except Exception as e:
+                                st.error(f"Error geocoding address: {str(e)}")
+                                return None
+
+                        location = do_geocode(location_input)
+                        
+                        if location:
+                            st.success(f"Found location: ({location.latitude}, {location.longitude})")
+                            coordinates = (location.latitude, location.longitude)
+                            
+                            # Get nearby facilities data
+                            nearby_data = {
+                                'schools': [],
+                                'healthcare': [],
+                                'emergency': [],
+                                'infrastructure': [],
+                                'geo_data': {
+                                    'flood_zones': [],
+                                    'evacuation_routes': [],
+                                    'bus_routes': []
+                                }
+                            }
+                            
+                            # Get schools from nearby ZIP codes
+                            try:
+                                # First, find the closest ZIP code to the coordinates
+                                closest_zip = zip_validator.get_closest_zip(coordinates)
+                                if closest_zip:
+                                    st.success(f"Found closest ZIP code: {closest_zip}")
+                                    nearby_zips = zip_validator.get_nearby_zips(closest_zip, radius)
+                                    if nearby_zips:
+                                        st.success(f"Found {len(nearby_zips)} nearby ZIP codes: {', '.join(nearby_zips)}")
+                                        school_count = 0
+                                        
+                                        # Get schools from each nearby ZIP code
+                                        for zip_code in nearby_zips:
+                                            if show_public_schools:
+                                                try:
+                                                    schools = apis['Education'].get_schools_by_zip(zip_code, 'public')
+                                                    st.write(f"Debug - Public schools response: {schools}")  # Debug log
+                                                    if schools and schools.get('success'):
+                                                        for school in schools.get('data', {}).get('schools', []):
+                                                            # Calculate distance to school
+                                                            if 'geometry' in school and school['geometry']:
+                                                                school_coords = school['geometry']['coordinates']
+                                                                st.write(f"Debug - School coordinates for {school['NAME']}: {school_coords}")  # Debug log
+                                                                school_coords = (school_coords[1], school_coords[0])  # Convert to (lat, lon)
+                                                                distance = geodesic(coordinates, school_coords).miles
+                                                                st.write(f"Debug - Distance to {school['NAME']}: {distance} miles")  # Debug log
+                                                                if distance <= radius:
+                                                                    school['school_type'] = 'public'
+                                                                    nearby_data['schools'].append(school)
+                                                                    school_count += 1
+                                                            else:
+                                                                st.warning(f"No geometry data for school: {school['NAME']}")  # Debug log
+                                                except Exception as e:
+                                                    st.warning(f"Error fetching public schools for ZIP {zip_code}: {str(e)}")
+                                            
+                                            if show_private_schools:
+                                                try:
+                                                    schools = apis['Education'].get_schools_by_zip(zip_code, 'private')
+                                                    st.write(f"Debug - Private schools response: {schools}")  # Debug log
+                                                    if schools and schools.get('success'):
+                                                        for school in schools.get('data', {}).get('schools', []):
+                                                            # Calculate distance to school
+                                                            if 'geometry' in school and school['geometry']:
+                                                                school_coords = school['geometry']['coordinates']
+                                                                st.write(f"Debug - School coordinates for {school['NAME']}: {school_coords}")  # Debug log
+                                                                school_coords = (school_coords[1], school_coords[0])  # Convert to (lat, lon)
+                                                                distance = geodesic(coordinates, school_coords).miles
+                                                                st.write(f"Debug - Distance to {school['NAME']}: {distance} miles")  # Debug log
+                                                                if distance <= radius:
+                                                                    school['school_type'] = 'private'
+                                                                    nearby_data['schools'].append(school)
+                                                                    school_count += 1
+                                                            else:
+                                                                st.warning(f"No geometry data for school: {school['NAME']}")  # Debug log
+                                                except Exception as e:
+                                                    st.warning(f"Error fetching private schools for ZIP {zip_code}: {str(e)}")
+                                            
+                                            if show_charter_schools:
+                                                try:
+                                                    schools = apis['Education'].get_schools_by_zip(zip_code, 'charter')
+                                                    st.write(f"Debug - Charter schools response: {schools}")  # Debug log
+                                                    if schools and schools.get('success'):
+                                                        for school in schools.get('data', {}).get('schools', []):
+                                                            # Calculate distance to school
+                                                            if 'geometry' in school and school['geometry']:
+                                                                school_coords = school['geometry']['coordinates']
+                                                                st.write(f"Debug - School coordinates for {school['NAME']}: {school_coords}")  # Debug log
+                                                                school_coords = (school_coords[1], school_coords[0])  # Convert to (lat, lon)
+                                                                distance = geodesic(coordinates, school_coords).miles
+                                                                st.write(f"Debug - Distance to {school['NAME']}: {distance} miles")  # Debug log
+                                                                if distance <= radius:
+                                                                    school['school_type'] = 'charter'
+                                                                    nearby_data['schools'].append(school)
+                                                                    school_count += 1
+                                                            else:
+                                                                st.warning(f"No geometry data for school: {school['NAME']}")  # Debug log
+                                                except Exception as e:
+                                                    st.warning(f"Error fetching charter schools for ZIP {zip_code}: {str(e)}")
+                                        
+                                        if school_count == 0:
+                                            st.warning("No schools found within the specified radius")
+                                        else:
+                                            st.success(f"Found {school_count} schools within {radius} miles")
+                                    else:
+                                        st.warning(f"No nearby ZIP codes found within {radius} miles")
+                                else:
+                                    st.warning("Could not find closest ZIP code for the given coordinates")
+                            except Exception as e:
+                                st.error(f"Error retrieving school data: {str(e)}")
+                            
+                            # Get healthcare facilities
+                            if show_hospitals:
+                                hospitals = apis['Healthcare'].get_hospitals()
+                                for facility in hospitals.get('features', []):
+                                    if 'geometry' in facility and facility['geometry']:
+                                        coords = facility['geometry']['coordinates']
+                                        facility_coords = (coords[1], coords[0])
+                                        if geodesic(coordinates, facility_coords).miles <= radius:
+                                            facility['properties']['type'] = 'Hospital'
+                                            nearby_data['healthcare'].append(facility)
+                            
+                            if show_mental_health:
+                                mental_health = apis['Healthcare'].get_mental_health_centers()
+                                for facility in mental_health.get('features', []):
+                                    if 'geometry' in facility and facility['geometry']:
+                                        coords = facility['geometry']['coordinates']
+                                        facility_coords = (coords[1], coords[0])
+                                        if geodesic(coordinates, facility_coords).miles <= radius:
+                                            facility['properties']['type'] = 'Mental Health Center'
+                                            nearby_data['healthcare'].append(facility)
+                            
+                            if show_clinics:
+                                clinics = apis['Healthcare'].get_free_standing_clinics()
+                                for facility in clinics.get('features', []):
+                                    if 'geometry' in facility and facility['geometry']:
+                                        coords = facility['geometry']['coordinates']
+                                        facility_coords = (coords[1], coords[0])
+                                        if geodesic(coordinates, facility_coords).miles <= radius:
+                                            facility['properties']['type'] = 'Clinic'
+                                            nearby_data['healthcare'].append(facility)
+                            
+                            # Get emergency services
+                            if show_police:
+                                police = apis['Emergency'].get_police_stations()
+                                for service in police.get('features', []):
+                                    if 'geometry' in service and service['geometry']:
+                                        coords = service['geometry']['coordinates']
+                                        service_coords = (coords[1], coords[0])
+                                        if geodesic(coordinates, service_coords).miles <= radius:
+                                            service['properties']['type'] = 'Police Station'
+                                            nearby_data['emergency'].append(service)
+                            
+                            if show_fire:
+                                fire = apis['Emergency'].get_fire_stations()
+                                for service in fire.get('features', []):
+                                    if 'geometry' in service and service['geometry']:
+                                        coords = service['geometry']['coordinates']
+                                        service_coords = (coords[1], coords[0])
+                                        if geodesic(coordinates, service_coords).miles <= radius:
+                                            service['properties']['type'] = 'Fire Station'
+                                            nearby_data['emergency'].append(service)
+                            
+                            # Get geographic data
+                            if show_flood_zones:
+                                flood_zones = apis['GeoData'].get_flood_zones()
+                                if flood_zones and 'features' in flood_zones:
+                                    for zone in flood_zones['features']:
+                                        if 'geometry' in zone and zone['geometry']:
+                                            coords = zone['geometry']['coordinates'][0]
+                                            for coord in coords:
+                                                point_coords = (coord[1], coord[0])
+                                                if geodesic(coordinates, point_coords).miles <= radius:
+                                                    nearby_data['geo_data']['flood_zones'].append(zone)
+                                                    break
+                            
+                            # Add infrastructure facilities
+                            if show_bus_stops:
+                                bus_stops = apis['Infrastructure']['Bus Stops'].get_all_stops()
+                                for stop in bus_stops.get('features', []):
+                                    if 'geometry' in stop and stop['geometry']:
+                                        coords = stop['geometry']['coordinates']
+                                        stop_coords = (coords[1], coords[0])
+                                        if geodesic(coordinates, stop_coords).miles <= radius:
+                                            stop['properties']['type'] = 'Bus Stop'
+                                            nearby_data['infrastructure'].append(stop)
+                            
+                            if show_libraries:
+                                libraries = apis['Infrastructure']['Libraries'].get_all_libraries()
+                                for library in libraries.get('features', []):
+                                    if 'geometry' in library and library['geometry']:
+                                        coords = library['geometry']['coordinates']
+                                        library_coords = (coords[1], coords[0])
+                                        if geodesic(coordinates, library_coords).miles <= radius:
+                                            library['properties']['type'] = 'Library'
+                                            nearby_data['infrastructure'].append(library)
+                            
+                            if show_parks:
+                                parks = apis['Infrastructure']['Parks'].get_all_parks()
+                                for park in parks.get('features', []):
+                                    if 'geometry' in park and park['geometry']:
+                                        coords = park['geometry']['coordinates']
+                                        park_coords = (coords[1], coords[0])
+                                        if geodesic(coordinates, park_coords).miles <= radius:
+                                            park['properties']['type'] = 'Park'
+                                            nearby_data['infrastructure'].append(park)
+                            
+                            # Create analysis tabs
+                            tab1, tab2, tab3 = st.tabs([
+                                "Proximity Analysis",
+                                "Service Coverage Analysis",
+                                "Risk Assessment"
+                            ])
+                            
+                            with tab1:
+                                st.subheader("📍 Proximity Analysis")
+                                
+                                # Create proximity chart
+                                facility_counts = {
+                                    'Schools': len(nearby_data['schools']),
+                                    'Healthcare': len(nearby_data['healthcare']),
+                                    'Emergency': len(nearby_data['emergency']),
+                                    'Infrastructure': len(nearby_data['infrastructure'])
+                                }
+                                
+                                fig = px.bar(
+                                    x=list(facility_counts.keys()),
+                                    y=list(facility_counts.values()),
+                                    title=f'Number of Facilities Within {radius} Miles',
+                                    labels={'x': 'Facility Type', 'y': 'Count'},
+                                    color=list(facility_counts.keys()),
+                                    color_discrete_sequence=px.colors.qualitative.Set3
+                                )
+                                st.plotly_chart(fig, use_container_width=True)
+                                
+                                # Show detailed facility lists in expanders
+                                with st.expander("View Detailed Facility List"):
+                                    if nearby_data['schools']:
+                                        st.subheader("Schools")
+                                        school_df = pd.DataFrame(nearby_data['schools'])
+                                        st.dataframe(school_df[['NAME', 'school_type', 'ADDRESS', 'ZIPCODE']])
+                                    
+                                    if nearby_data['healthcare']:
+                                        st.subheader("Healthcare Facilities")
+                                        healthcare_df = pd.DataFrame([f['properties'] for f in nearby_data['healthcare']])
+                                        st.dataframe(healthcare_df[['NAME', 'type', 'ADDRESS']])
+                                    
+                                    if nearby_data['emergency']:
+                                        st.subheader("Emergency Services")
+                                        emergency_df = pd.DataFrame([f['properties'] for f in nearby_data['emergency']])
+                                        st.dataframe(emergency_df[['NAME', 'type', 'ADDRESS']])
+                                    
+                                    if nearby_data['infrastructure']:
+                                        st.subheader("Infrastructure")
+                                        infrastructure_df = pd.DataFrame([f['properties'] for f in nearby_data['infrastructure']])
+                                        st.dataframe(infrastructure_df[['NAME', 'type', 'ADDRESS']])
+                            
+                            with tab2:
+                                st.subheader("📊 Service Coverage Analysis")
+                                
+                                # Calculate coverage scores
+                                coverage_data = pd.DataFrame({
+                                    'Category': ['Education', 'Healthcare', 'Emergency', 'Infrastructure'],
+                                    'Coverage Score': [
+                                        min(len(nearby_data['schools']) / 5, 10),
+                                        min(len(nearby_data['healthcare']) / 3, 10),
+                                        min(len(nearby_data['emergency']) / 2, 10),
+                                        min(len(nearby_data['infrastructure']) / 8, 10)
+                                    ]
+                                })
+                                
+                                fig = px.bar(
+                                    coverage_data,
+                                    x='Category',
+                                    y='Coverage Score',
+                                    title='Service Coverage Analysis (0-10 scale)',
+                                    color='Category',
+                                    color_discrete_sequence=px.colors.qualitative.Set1
+                                )
+                                st.plotly_chart(fig, use_container_width=True)
+                                st.info("Coverage scores are normalized on a scale of 0-10, where 10 represents excellent coverage.")
+                            
+                            with tab3:
+                                st.subheader("⚠️ Risk Assessment")
+                                
+                                # Calculate risk factors
+                                risk_data = pd.DataFrame({
+                                    'Risk Factor': [
+                                        'Flood Zone Coverage',
+                                        'Emergency Service Access',
+                                        'Healthcare Access',
+                                        'Infrastructure Access'
+                                    ],
+                                    'Risk Score': [
+                                        min(len(nearby_data['geo_data']['flood_zones']) * 2, 10),
+                                        max(0, 10 - len(nearby_data['emergency']) * 3),
+                                        max(0, 10 - len(nearby_data['healthcare']) * 2),
+                                        max(0, 10 - len(nearby_data['infrastructure']) * 1)
+                                    ]
+                                })
+                                
+                                fig = px.bar(
+                                    risk_data,
+                                    x='Risk Factor',
+                                    y='Risk Score',
+                                    title='Risk Assessment (Higher Score = Higher Risk)',
+                                    color='Risk Factor',
+                                    color_discrete_sequence=px.colors.sequential.Reds
+                                )
+                                st.plotly_chart(fig, use_container_width=True)
+                                
+                                # Calculate overall risk score
+                                risk_score = risk_data['Risk Score'].mean()
+                                risk_color = 'green' if risk_score < 4 else 'yellow' if risk_score < 7 else 'red'
+                                st.markdown(f"### Overall Risk Level: <span style='color: {risk_color}'>{risk_score:.1f}/10</span>", 
+                                          unsafe_allow_html=True)
+                                
+                                # Add geographic data summary
+                                col1, col2, col3 = st.columns(3)
+                                with col1:
+                                    st.metric("Flood Zones", 
+                                            len(nearby_data['geo_data']['flood_zones']),
+                                            help="Number of flood zones in your area")
+                                with col2:
+                                    st.metric("Emergency Services",
+                                            len(nearby_data['emergency']),
+                                            help="Number of emergency services in your area")
+                                with col3:
+                                    st.metric("Healthcare Facilities",
+                                            len(nearby_data['healthcare']),
+                                            help="Number of healthcare facilities in your area")
+                    except (GeocoderTimedOut, GeocoderServiceError) as e:
+                        st.error(f"Error connecting to geocoding service. Please try again or use a ZIP code instead. Error: {str(e)}")
+                    except Exception as e:
+                        st.error(f"Error processing location: {str(e)}")
             except Exception as e:
                 st.error(f"Error processing location: {str(e)}")
 

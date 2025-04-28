@@ -10,7 +10,7 @@ from education import EducationAPI
 from src.zip_validator import ZIPValidator
 from emergency_services import EmergencyServicesAPI
 from geopy.distance import geodesic
-from infrastructure import ParksAPI, BusStopsAPI
+from infrastructure import ParksAPI
 
 @st.cache_data
 def get_schools_by_zip():
@@ -319,81 +319,268 @@ def plot_zip_park_density_treemap():
     return fig 
 
 @st.cache_data
-def plot_bus_stop_distance_heatmap():
+def get_schools_by_grade():
     """
-    Creates a heat map showing the average distance to the nearest bus stop for each ZIP code
+    Fetches all schools and returns a DataFrame with grade level distribution
     """
-    # Initialize APIs
+    education_api = EducationAPI()
     zip_validator = ZIPValidator()
-    bus_stops_api = BusStopsAPI()
     
-    # Get all ZIP codes and bus stops
+    # Get all valid Miami-Dade ZIP codes
     zip_codes = zip_validator.get_all_zip_codes()
-    bus_stops = bus_stops_api.get_all_stops()
     
-    # Initialize data structure
-    zip_data = {
-        'ZIP_Code': [],
-        'Avg_Distance': []  # Average distance to nearest bus stop in miles
+    # Initialize dictionary to store grade level counts
+    grade_counts = {
+        'Grade_Level': [],
+        'School_Count': [],
+        'School_Type': []
     }
     
-    # Calculate average distances for each ZIP code
+    # Fetch schools for each ZIP code
     for zip_code in zip_codes:
-        zip_coords = zip_validator.get_zip_coordinates(zip_code)
-        if not zip_coords:
-            continue
-            
-        # Find distances to all bus stops
-        distances = []
-        for stop in bus_stops.get('features', []):
-            if 'geometry' in stop and stop['geometry']:
-                coords = stop['geometry']['coordinates']
-                stop_coords = (coords[1], coords[0])  # Convert to (lat, lon)
-                distance = geodesic(zip_coords, stop_coords).miles
-                distances.append(distance)
+        # Get schools of each type
+        public_schools = education_api.get_schools_by_zip(zip_code, 'public')
+        private_schools = education_api.get_schools_by_zip(zip_code, 'private')
+        charter_schools = education_api.get_schools_by_zip(zip_code, 'charter')
         
-        # Calculate average distance if we found any bus stops
-        if distances:
-            avg_distance = sum(distances) / len(distances)
-            zip_data['ZIP_Code'].append(zip_code)
-            zip_data['Avg_Distance'].append(avg_distance)
+        # Process each school type
+        for school_type, schools_data in [
+            ('Public', public_schools),
+            ('Private', private_schools),
+            ('Charter', charter_schools)
+        ]:
+            if schools_data and schools_data.get('success'):
+                for school in schools_data.get('data', {}).get('schools', []):
+                    grade_level = school.get('GRDLEVEL', 'Unknown')
+                    if grade_level != 'Unknown':
+                        grade_counts['Grade_Level'].append(grade_level)
+                        grade_counts['School_Count'].append(1)
+                        grade_counts['School_Type'].append(school_type)
     
-    # Create DataFrame
-    df = pd.DataFrame(zip_data)
+    return pd.DataFrame(grade_counts)
+
+def plot_schools_by_grade():
+    """
+    Creates and returns an area chart showing the distribution of schools across grade levels
+    """
+    # Get the grade level data
+    df = get_schools_by_grade()
     
-    # Create heat map
-    fig = px.choropleth(
-        df,
-        geojson=zip_validator.get_zip_geojson(),
-        locations='ZIP_Code',
-        color='Avg_Distance',
-        color_continuous_scale='Brwnyl',  # Brown to yellow color scale
-        title='Average Distance to Nearest Bus Stop by ZIP Code',
-        labels={'Avg_Distance': 'Average Distance (miles)'}
+    # Group by grade level and school type
+    df_grouped = df.groupby(['Grade_Level', 'School_Type'])['School_Count'].sum().reset_index()
+    
+    # Sort grade levels in a logical order
+    grade_order = ['PK', 'K', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12']
+    df_grouped['Grade_Level'] = pd.Categorical(df_grouped['Grade_Level'], categories=grade_order, ordered=True)
+    df_grouped = df_grouped.sort_values('Grade_Level')
+    
+    # Create area chart
+    fig = px.area(
+        df_grouped,
+        x='Grade_Level',
+        y='School_Count',
+        color='School_Type',
+        title='School Distribution by Grade Level',
+        labels={
+            'Grade_Level': 'Grade Level',
+            'School_Count': 'Number of Schools',
+            'School_Type': 'School Type'
+        },
+        color_discrete_map={
+            'Public': '#1f77b4',
+            'Private': '#ff7f0e',
+            'Charter': '#2ca02c'
+        }
     )
     
-    # Update layout
+    # Update layout for better appearance
     fig.update_layout(
+        xaxis_title='Grade Level',
+        yaxis_title='Number of Schools',
+        showlegend=True,
         title={
-            'text': 'Average Distance to Nearest Bus Stop by ZIP Code',
+            'text': 'School Distribution by Grade Level',
             'y': 0.95,
             'x': 0.5,
             'xanchor': 'center',
             'yanchor': 'top',
             'font': {'size': 24}
-        },
-        height=450,
-        margin=dict(l=0, r=0, t=50, b=0),
-        geo=dict(
-            scope='usa',
-            projection_scale=20,  # Zoom level
-            center=dict(lat=25.55, lon=-80.5),  # Center of the map
-            showland=True,
-            landcolor='rgb(243, 243, 243)',
-            showcoastlines=True,
-            coastlinecolor='rgb(80, 80, 80)',
-            showframe=False
-        )
+        }
     )
     
     return fig 
+
+@st.cache_data
+def get_facility_counts(nearby_data: dict, radius: float) -> dict:
+    """
+    Get counts of different types of facilities within the specified radius.
+    
+    Args:
+        nearby_data: Dictionary containing nearby facility data
+        radius: Search radius in miles
+        
+    Returns:
+        Dictionary containing facility counts
+    """
+    return {
+        'Schools': len(nearby_data['schools']),
+        'Healthcare': len(nearby_data['healthcare']),
+        'Emergency': len(nearby_data['emergency']),
+        'Infrastructure': len(nearby_data['infrastructure'])
+    }
+
+@st.cache_data
+def plot_proximity_chart(facility_counts: dict, radius: float):
+    """
+    Create a bar chart showing the number of facilities within the specified radius.
+    
+    Args:
+        facility_counts: Dictionary containing facility counts
+        radius: Search radius in miles
+        
+    Returns:
+        Plotly figure object
+    """
+    fig = px.bar(
+        x=list(facility_counts.keys()),
+        y=list(facility_counts.values()),
+        title=f'Number of Facilities Within {radius} Miles',
+        labels={'x': 'Facility Type', 'y': 'Count'},
+        color=list(facility_counts.keys()),
+        color_discrete_sequence=px.colors.qualitative.Set3
+    )
+    
+    # Update layout for better appearance
+    fig.update_layout(
+        xaxis_title='Facility Type',
+        yaxis_title='Count',
+        showlegend=False,
+        title={
+            'y': 0.95,
+            'x': 0.5,
+            'xanchor': 'center',
+            'yanchor': 'top',
+            'font': {'size': 20}
+        }
+    )
+    
+    return fig
+
+@st.cache_data
+def get_coverage_scores(nearby_data: dict) -> pd.DataFrame:
+    """
+    Calculate coverage scores for different service categories.
+    
+    Args:
+        nearby_data: Dictionary containing nearby facility data
+        
+    Returns:
+        DataFrame containing coverage scores
+    """
+    return pd.DataFrame({
+        'Category': ['Education', 'Healthcare', 'Emergency', 'Infrastructure'],
+        'Coverage Score': [
+            min(len(nearby_data['schools']) / 5, 10),
+            min(len(nearby_data['healthcare']) / 3, 10),
+            min(len(nearby_data['emergency']) / 2, 10),
+            min(len(nearby_data['infrastructure']) / 8, 10)
+        ]
+    })
+
+@st.cache_data
+def plot_coverage_chart(coverage_data: pd.DataFrame):
+    """
+    Create a bar chart showing service coverage analysis.
+    
+    Args:
+        coverage_data: DataFrame containing coverage scores
+        
+    Returns:
+        Plotly figure object
+    """
+    fig = px.bar(
+        coverage_data,
+        x='Category',
+        y='Coverage Score',
+        title='Service Coverage Analysis (0-10 scale)',
+        color='Category',
+        color_discrete_sequence=px.colors.qualitative.Set1
+    )
+    
+    # Update layout for better appearance
+    fig.update_layout(
+        xaxis_title='Service Category',
+        yaxis_title='Coverage Score (0-10)',
+        showlegend=False,
+        title={
+            'y': 0.95,
+            'x': 0.5,
+            'xanchor': 'center',
+            'yanchor': 'top',
+            'font': {'size': 20}
+        }
+    )
+    
+    return fig
+
+@st.cache_data
+def get_risk_scores(nearby_data: dict) -> pd.DataFrame:
+    """
+    Calculate risk scores for different factors.
+    
+    Args:
+        nearby_data: Dictionary containing nearby facility data
+        
+    Returns:
+        DataFrame containing risk scores
+    """
+    return pd.DataFrame({
+        'Risk Factor': [
+            'Flood Zone Coverage',
+            'Emergency Service Access',
+            'Healthcare Access',
+            'Infrastructure Access'
+        ],
+        'Risk Score': [
+            min(len(nearby_data['geo_data']['flood_zones']) * 2, 10),
+            max(0, 10 - len(nearby_data['emergency']) * 3),
+            max(0, 10 - len(nearby_data['healthcare']) * 2),
+            max(0, 10 - len(nearby_data['infrastructure']) * 1)
+        ]
+    })
+
+@st.cache_data
+def plot_risk_chart(risk_data: pd.DataFrame):
+    """
+    Create a bar chart showing risk assessment.
+    
+    Args:
+        risk_data: DataFrame containing risk scores
+        
+    Returns:
+        Plotly figure object
+    """
+    fig = px.bar(
+        risk_data,
+        x='Risk Factor',
+        y='Risk Score',
+        title='Risk Assessment (Higher Score = Higher Risk)',
+        color='Risk Factor',
+        color_discrete_sequence=px.colors.sequential.Reds
+    )
+    
+    # Update layout for better appearance
+    fig.update_layout(
+        xaxis_title='Risk Factor',
+        yaxis_title='Risk Score (0-10)',
+        showlegend=False,
+        title={
+            'y': 0.95,
+            'x': 0.5,
+            'xanchor': 'center',
+            'yanchor': 'top',
+            'font': {'size': 20}
+        }
+    )
+    
+    return fig
