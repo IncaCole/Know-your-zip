@@ -338,7 +338,7 @@ def main():
     # Display chat messages
     with col2:
         st.subheader("💬 Chat with AI Assistant")
-        
+        st.markdown('<div class="chat-window">', unsafe_allow_html=True)
         for message in st.session_state.messages:
             with st.container():
                 if message["role"] == "user":
@@ -361,6 +361,7 @@ def main():
                     """, unsafe_allow_html=True)
                 else:  # system message
                     st.info(message["content"])
+        st.markdown('</div>', unsafe_allow_html=True)
 
         # Create a form for input
         with st.form(key="chat_form", clear_on_submit=True):
