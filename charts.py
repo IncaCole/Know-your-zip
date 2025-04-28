@@ -230,7 +230,7 @@ def plot_fire_station_proximity_pie():
         ]
     )
     
-    return fig
+    return fig 
 
 @st.cache_data
 def plot_zip_park_density_treemap():
@@ -287,20 +287,19 @@ def plot_zip_park_density_treemap():
         color='Park_Count',
         color_continuous_scale='Greens',
         title='ZIP Code Areas and Park Density',
-        custom_data=['Park_Count', 'Parks_per_SqMile']
+        custom_data=['Park_Count']
     )
     
     # Update layout and hover template
     fig.update_traces(
         hovertemplate="""
         ZIP Code: %{label}<br>
-        Area: %{value:.1f} sq mi<br>
         Parks: %{customdata[0]}<br>
-        Parks per sq mi: %{customdata[1]:.1f}<br>
+        Area: %{value:.1f} sq mi<br>
         <extra></extra>
         """,
-        textinfo="label+value",
-        texttemplate="<b>%{label}</b><br>%{value:.1f} sq mi"
+        textinfo="label",
+        texttemplate="<b>%{label}</b>"
     )
     
     fig.update_layout(

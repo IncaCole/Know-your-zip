@@ -100,10 +100,44 @@ def main():
     
     with col2:
         st.plotly_chart(plot_fire_station_proximity_pie(), use_container_width=True)
-    
+        
     with col3:
         st.plotly_chart(plot_zip_park_density_treemap(), use_container_width=True)
     
+    # Add Parks Distribution Analysis
+    st.subheader("🌳 Parks Distribution by Region")
+    counts, parks = analyze_parks_distribution(apis['Infrastructure']['Parks'])
+    
+    # Create columns for metrics
+    cols = st.columns(4)
+    for i, (region, count) in enumerate(counts.items()):
+        with cols[i]:
+            st.metric(f"{region}", count)
+    
+    # Create a pie chart for parks distribution
+    df = pd.DataFrame({
+        'Region': list(counts.keys()),
+        'Number of Parks': list(counts.values())
+    })
+    
+    # Sort DataFrame by park count to assign colors based on segment size
+    df = df.sort_values('Number of Parks', ascending=False)
+    
+    # Create custom color sequence from light green (smaller values) to darker green (larger values)
+    colors = ['#2E8B57',     # Dark green for largest
+              '#3CB371',     # Medium-dark green
+              '#90EE90',     # Light green
+              '#98FB98']     # Lighter green for smallest
+    
+    fig = px.pie(
+        df,
+        values='Number of Parks',
+        names='Region',
+        title='Parks Distribution Across Miami-Dade County',
+        color_discrete_sequence=colors
+    )
+    st.plotly_chart(fig, use_container_width=True)
+
     # Create two columns for controls and main content
     control_col, main_col = st.columns([1, 3])
 
