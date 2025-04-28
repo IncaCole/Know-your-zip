@@ -350,14 +350,22 @@ def get_schools_by_grade():
             ('Charter', charter_schools)
         ]:
             if schools_data and schools_data.get('success'):
-                for school in schools_data.get('data', {}).get('schools', []):
+                schools = schools_data.get('data', {}).get('schools', [])
+                st.write(f"Found {len(schools)} {school_type} schools in ZIP {zip_code}")  # Debug line
+                for school in schools:
                     grade_level = school.get('GRDLEVEL', 'Unknown')
                     if grade_level != 'Unknown':
                         grade_counts['Grade_Level'].append(grade_level)
                         grade_counts['School_Count'].append(1)
                         grade_counts['School_Type'].append(school_type)
     
-    return pd.DataFrame(grade_counts)
+    # Create DataFrame
+    df = pd.DataFrame(grade_counts)
+    
+    # Debug information
+    st.write("Total schools by type:", df.groupby('School_Type')['School_Count'].sum())
+    
+    return df
 
 def plot_schools_by_grade():
     """
