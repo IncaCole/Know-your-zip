@@ -60,7 +60,7 @@ def plot_schools_histogram():
     fig = px.histogram(
         df,
         x='Total_Schools',
-        nbins=20,
+        nbins=6,
         title='Distribution of Schools Across Miami-Dade ZIP Codes',
         labels={'Total_Schools': 'Number of Schools', 'count': 'Number of ZIP Codes'},
         color_discrete_sequence=['#1f77b4']  # Use a nice blue color
