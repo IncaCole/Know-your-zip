@@ -92,16 +92,6 @@ st.markdown("""
     .chat-message .message {
         flex: 1;
     }
-    .chat-window {
-        height: 500px;
-        overflow-y: auto;
-        background: #f8f9fa;
-        border-radius: 8px;
-        padding: 1rem;
-        margin-bottom: 1rem;
-        display: flex;
-        flex-direction: column-reverse; /* Start chat at the bottom */
-    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -348,30 +338,30 @@ def main():
     # Display chat messages
     with col2:
         st.subheader("💬 Chat with AI Assistant")
-        chat_html = '<div class="chat-window">'
+        st.markdown('<div class="chat-window">', unsafe_allow_html=True)
         for message in st.session_state.messages:
-            if message["role"] == "user":
-                chat_html += f'''
-                <div class="chat-message user">
-                    <div class="content">
-                        <div class="avatar">👤</div>
-                        <div class="message">{message["content"]}</div>
+            with st.container():
+                if message["role"] == "user":
+                    st.markdown(f"""
+                    <div class="chat-message user">
+                        <div class="content">
+                            <div class="avatar">👤</div>
+                            <div class="message">{message["content"]}</div>
+                        </div>
                     </div>
-                </div>
-                '''
-            elif message["role"] == "assistant":
-                chat_html += f'''
-                <div class="chat-message bot">
-                    <div class="content">
-                        <div class="avatar">🤖</div>
-                        <div class="message">{message["content"]}</div>
+                    """, unsafe_allow_html=True)
+                elif message["role"] == "assistant":
+                    st.markdown(f"""
+                    <div class="chat-message bot">
+                        <div class="content">
+                            <div class="avatar">🤖</div>
+                            <div class="message">{message["content"]}</div>
+                        </div>
                     </div>
-                </div>
-                '''
-            else:
-                chat_html += f'<div class="chat-message system">{message["content"]}</div>'
-        chat_html += '</div>'
-        st.markdown(chat_html, unsafe_allow_html=True)
+                    """, unsafe_allow_html=True)
+                else:  # system message
+                    st.info(message["content"])
+        st.markdown('</div>', unsafe_allow_html=True)
 
         # Create a form for input
         with st.form(key="chat_form", clear_on_submit=True):
@@ -425,15 +415,7 @@ def main():
                         bot_response = str(response).strip()
                     
                     # Remove any "Assistant:" prefix if present
-                    def extract_message_text(text):
-                        # If the response starts with the chat-message bot div, extract only the text inside <div class="message">...</div>
-                        match = re.search(r'<div class="message">(.*?)</div>', text, re.DOTALL)
-                        if match:
-                            return match.group(1).strip()
-                        # Otherwise, strip all HTML tags
-                        clean = re.compile('<.*?>')
-                        return re.sub(clean, '', text)
-                    bot_response = extract_message_text(bot_response)
+                    bot_response = bot_response.replace("Assistant:", "").strip()
                     
                     # Add bot response to chat history
                     st.session_state.messages.append({"role": "assistant", "content": bot_response})
