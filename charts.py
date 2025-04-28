@@ -253,9 +253,9 @@ def plot_county_regions():
         lon=[point[1] for point in county_shape],
         lat=[point[0] for point in county_shape],
         mode='lines',
-        line=dict(width=2, color='#2F4538'),  # Dark muted green for outline
+        line=dict(width=1, color='rgba(47, 69, 56, 0.3)'),  # Thinner, more transparent line
         fill='toself',
-        fillcolor='rgba(144, 169, 144, 0.3)',  # Muted sage green with transparency
+        fillcolor='rgba(144, 169, 144, 0.3)',  # Keeping the same fill color
         name='Miami-Dade County'
     ))
     
@@ -272,7 +272,7 @@ def plot_county_regions():
             lat=[label['lat']],
             text=[label['text']],
             mode='text',
-            textfont=dict(size=16, color='#2F4538', family='Arial Black'),  # Matching dark muted green for text
+            textfont=dict(size=16, color='#2F4538', family='Arial Black'),  # Keeping text color the same
             name=label['text']
         ))
     
@@ -294,7 +294,7 @@ def plot_county_regions():
             showland=True,
             landcolor='rgb(243, 243, 243)',
             showcoastlines=True,
-            coastlinecolor='rgb(80, 80, 80)',
+            coastlinecolor='rgba(80, 80, 80, 0.2)',  # Making coastlines more transparent too
             showframe=False
         ),
         height=450,  # Reduced height to match other charts
