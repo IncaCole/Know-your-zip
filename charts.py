@@ -61,7 +61,7 @@ def plot_schools_histogram():
         df,
         x='Total_Schools',
         nbins=6,
-        title='Distribution of Schools Across Miami-Dade ZIP Codes',
+        title='Schools per ZIP Code',
         labels={'Total_Schools': 'Number of Schools', 'count': 'Number of ZIP Codes'},
         color_discrete_sequence=['#1f77b4'],  # Use a nice blue color
         category_orders={'Total_Schools': sorted(df['Total_Schools'].unique())},  # Sort bins by value
