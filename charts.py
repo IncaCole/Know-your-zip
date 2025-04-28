@@ -53,8 +53,7 @@ def get_schools_by_zip():
 
 def plot_schools_histogram():
     """
-    Creates and returns a histogram showing the distribution of schools across ZIP codes,
-    styled to look like books viewed from a shelf angle
+    Creates and returns a histogram showing the distribution of schools across ZIP codes
     """
     # Get the school counts data
     df = get_schools_by_zip()
@@ -66,94 +65,33 @@ def plot_schools_histogram():
         nbins=6,
         title='School Distribution',
         labels={'Total_Schools': 'Number of Schools', 'count': 'Number of ZIPs'},
-        category_orders={'Total_Schools': sorted(df['Total_Schools'].unique())},
-        text_auto=True
-    )
-    
-    # Update traces to look like angled books
-    fig.update_traces(
-        # Main bar represents the book spine
-        marker=dict(
-            color='#8B4513',  # Dark brown for book spine
-            pattern=dict(
-                shape="/",  # Diagonal lines for leather texture
-                fillmode="overlay",
-                size=3,
-                solidity=0.3,
-                fgcolor="rgba(218, 165, 32, 0.4)"  # Gold color for spine details
-            ),
-            line=dict(
-                color='#654321',  # Darker brown for spine edges
-                width=2
-            )
-        ),
-        textposition='inside',
-        textfont=dict(
-            size=14, 
-            color='#FFD700',  # Gold color for text
-            family='Times New Roman'
-        ),
-        insidetextanchor='middle',
-        width=0.7  # Make bars slightly thinner to look more like books
+        category_orders={'Total_Schools': sorted(df['Total_Schools'].unique())},  # Sort bins by value
+        text_auto=True  # Enable automatic text display
     )
     
     # Update layout for better appearance
     fig.update_layout(
-        bargap=0.5,  # Increased gap between bars to show "books" better
+        bargap=0.1,
         xaxis_title='Number of Schools per ZIP',
         yaxis_title='Number of ZIPs',
         showlegend=False,
-        yaxis_range=[0, 40],
+        yaxis_range=[0, 40],  # Set y-axis range from 0 to 40
         title={
             'text': 'School Distribution',
-            'y': 0.95,
-            'x': 0.5,
+            'y': 0.95,  # Adjust title position
+            'x': 0.5,   # Center title
             'xanchor': 'center',
             'yanchor': 'top',
-            'font': {'size': 24}
-        },
-        plot_bgcolor='rgba(245, 245, 245, 0.8)',  # Light gray background
-        paper_bgcolor='white'
+            'font': {'size': 24}  # Make title larger
+        }
     )
     
-    # Add shapes to create the "pages" effect on the right side of each bar
-    hist_data = df['Total_Schools'].value_counts().sort_index()
-    bar_positions = sorted(df['Total_Schools'].unique())
-    max_count = hist_data.max()
-    
-    for i, pos in enumerate(bar_positions):
-        count = hist_data[pos]
-        # Add a lighter rectangle for pages
-        fig.add_shape(
-            type="path",
-            path=f"M {pos+0.35} 0 L {pos+0.35} {count} L {pos+0.5} {count-1} L {pos+0.5} 1 Z",
-            fillcolor='#F5F5F5',  # Off-white for pages
-            line=dict(color='#D3D3D3', width=1),
-            layer='below'
-        )
-        # Add lines to represent individual pages
-        for j in range(5):  # Add 5 line details for pages
-            y_offset = j * (count/6)
-            fig.add_shape(
-                type="line",
-                x0=pos+0.35,
-                y0=y_offset,
-                x1=pos+0.5,
-                y1=max(0, y_offset-1),
-                line=dict(color='#D3D3D3', width=0.5),
-                layer='below'
-            )
-    
-    # Add shadow effect under each "book"
-    for pos in bar_positions:
-        count = hist_data[pos]
-        fig.add_shape(
-            type="path",
-            path=f"M {pos-0.35} 0 L {pos+0.5} 0 L {pos+0.5} 0.5 L {pos-0.35} 0.5 Z",
-            fillcolor='rgba(0,0,0,0.1)',
-            line=dict(width=0),
-            layer='below'
-        )
+    # Update text position to be inside the bars
+    fig.update_traces(
+        textposition='inside',
+        textfont=dict(size=14, color='white'),  # Make text white and larger
+        insidetextanchor='middle'  # Center text in bars
+    )
     
     return fig
 
