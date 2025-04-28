@@ -332,6 +332,7 @@ def get_schools_by_grade():
     
     # Define all grade levels
     all_grades = ['PK', 'K'] + [str(i) for i in range(1, 13)]
+    school_types = ['Public', 'Private', 'Charter']
     grade_counts = {
         'Grade_Level': [],
         'School_Count': [],
@@ -340,16 +341,14 @@ def get_schools_by_grade():
     
     def parse_grades(grade_str):
         grade_str = grade_str.upper().replace(' ', '')
-        # Handle common patterns
         if '-' in grade_str:
             start, end = grade_str.split('-')
-            # Map PK and K
             grade_map = {'PK': 0, 'K': 1}
             def grade_to_num(g):
                 if g in grade_map:
                     return grade_map[g]
                 try:
-                    return int(g) + 1  # 1-based for PK=0, K=1, 1=2, ...
+                    return int(g) + 1
                 except:
                     return None
             s = grade_to_num(start)
@@ -364,10 +363,8 @@ def get_schools_by_grade():
                     else:
                         grades.append(str(n-1))
                 return grades
-        # Single grade
         if grade_str in all_grades:
             return [grade_str]
-        # Sometimes it's a comma-separated list
         if ',' in grade_str:
             return [g for g in grade_str.split(',') if g in all_grades]
         return []
@@ -388,28 +385,22 @@ def get_schools_by_grade():
                         grade_counts['Grade_Level'].append(grade)
                         grade_counts['School_Count'].append(1)
                         grade_counts['School_Type'].append(school_type)
-    
     df = pd.DataFrame(grade_counts)
+    # Debug: Show counts for each school type
+    st.write('School type counts:', df['School_Type'].value_counts())
     return df
 
 def plot_schools_by_grade():
     """
     Creates and returns a line chart showing the distribution of schools across grade levels
     """
-    # Get the grade level data
     df = get_schools_by_grade()
-    
-    # Group by grade level and school type
-    df_grouped = df.groupby(['Grade_Level', 'School_Type'])['School_Count'].sum().reset_index()
-    
-    # Define the complete grade level order
-    grade_order = ['PK', 'K', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12']
-    
-    # Convert Grade_Level to categorical with the specified order
-    df_grouped['Grade_Level'] = pd.Categorical(df_grouped['Grade_Level'], categories=grade_order, ordered=True)
-    df_grouped = df_grouped.sort_values('Grade_Level')
-    
-    # Create line chart with distinct colors for each school type
+    # Ensure all grade levels and school types are present
+    all_grades = ['PK', 'K'] + [str(i) for i in range(1, 13)]
+    school_types = ['Public', 'Private', 'Charter']
+    idx = pd.MultiIndex.from_product([all_grades, school_types], names=['Grade_Level', 'School_Type'])
+    df_grouped = df.groupby(['Grade_Level', 'School_Type'])['School_Count'].sum().reindex(idx, fill_value=0).reset_index()
+    # Plot
     fig = px.line(
         df_grouped,
         x='Grade_Level',
@@ -422,13 +413,11 @@ def plot_schools_by_grade():
             'School_Type': 'School Type'
         },
         color_discrete_map={
-            'Public': '#1f77b4',  # Blue for public schools
-            'Private': '#ff7f0e',  # Orange for private schools
-            'Charter': '#2ca02c'   # Green for charter schools
+            'Public': '#1f77b4',
+            'Private': '#ff7f0e',
+            'Charter': '#2ca02c'
         }
     )
-    
-    # Update layout for better appearance
     fig.update_layout(
         xaxis_title='Grade Level',
         yaxis_title='Number of Schools',
@@ -449,12 +438,9 @@ def plot_schools_by_grade():
             x=1.05
         )
     )
-    
-    # Update traces for better visibility
     fig.update_traces(
         line=dict(width=3),
-        mode='lines+markers',  # Add markers to the lines
+        mode='lines+markers',
         marker=dict(size=8)
     )
-    
     return fig 
