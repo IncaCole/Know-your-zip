@@ -352,8 +352,24 @@ def get_schools_by_grade():
             if schools_data and schools_data.get('success'):
                 schools = schools_data.get('data', {}).get('schools', [])
                 for school in schools:
+                    # Get grade level and clean it
                     grade_level = school.get('GRDLEVEL', 'Unknown')
                     if grade_level != 'Unknown':
+                        # Clean and standardize grade level
+                        grade_level = grade_level.strip().upper()
+                        
+                        # Handle special cases
+                        if grade_level in ['PK', 'K']:
+                            grade_level = grade_level
+                        elif grade_level.isdigit():
+                            grade_level = str(int(grade_level))  # Remove leading zeros
+                        elif 'ELEMENTARY' in grade_level:
+                            grade_level = 'ELEMENTARY'
+                        elif 'MIDDLE' in grade_level:
+                            grade_level = 'MIDDLE'
+                        elif 'HIGH' in grade_level:
+                            grade_level = 'HIGH'
+                        
                         grade_counts['Grade_Level'].append(grade_level)
                         grade_counts['School_Count'].append(1)
                         grade_counts['School_Type'].append(school_type)
