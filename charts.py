@@ -54,7 +54,7 @@ def get_schools_by_zip():
 def plot_schools_histogram():
     """
     Creates and returns a histogram showing the distribution of schools across ZIP codes,
-    styled to look like stacks of books
+    styled to look like realistic stacks of books
     """
     # Get the school counts data
     df = get_schools_by_zip()
@@ -73,43 +73,76 @@ def plot_schools_histogram():
     # Update traces to look like stacks of books
     fig.update_traces(
         marker=dict(
-            color='#8B4513',  # Saddle brown color for books
+            color='#D4B08C',  # Base book color (light brown)
             pattern=dict(
-                shape="\\",  # Diagonal lines for book spine texture
+                shape="-",  # Horizontal lines to represent individual books
                 fillmode="overlay",
-                size=8,
-                solidity=0.7,
-                fgcolor="rgba(255, 250, 240, 0.5)"  # Floral white for book spine details
+                size=4,  # Size of the pattern (representing book thickness)
+                solidity=0.9,
+                fgcolor="rgba(139, 69, 19, 0.5)"  # Darker brown for book edges
             )
         ),
         textposition='inside',
-        textfont=dict(size=14, color='floralwhite'),  # Light text color
+        textfont=dict(size=14, color='#2F1810'),  # Dark brown text
         insidetextanchor='middle'
     )
     
     # Update layout for better appearance
     fig.update_layout(
-        bargap=0.1,
+        bargap=0.2,  # Increased gap between bars
         xaxis_title='Number of Schools per ZIP',
         yaxis_title='Number of ZIPs',
         showlegend=False,
-        yaxis_range=[0, 40],  # Set y-axis range from 0 to 40
+        yaxis_range=[0, 40],
         title={
             'text': 'School Distribution',
-            'y': 0.95,  # Adjust title position
-            'x': 0.5,   # Center title
+            'y': 0.95,
+            'x': 0.5,
             'xanchor': 'center',
             'yanchor': 'top',
-            'font': {'size': 24}  # Make title larger
+            'font': {'size': 24}
         },
-        plot_bgcolor='rgba(255, 250, 240, 0.3)',  # Light floral white background
+        plot_bgcolor='rgba(253, 245, 230, 0.5)',  # Old lace color for background
         paper_bgcolor='white'
     )
     
-    # Add a border effect to make bars look more like book stacks
+    # Add multiple border effects to create book edges
     fig.update_traces(
-        marker_line_color='#654321',  # Darker brown for book edges
-        marker_line_width=1.5
+        marker_line_color='#8B4513',  # Saddle brown for edges
+        marker_line_width=2,  # Thicker border for more defined books
+        # Add a second pattern layer for more texture
+        marker=dict(
+            color='#D4B08C',  # Base color
+            pattern=dict(
+                shape="-",  # Horizontal lines
+                fillmode="overlay",
+                size=4,
+                solidity=0.9,
+                fgcolor="rgba(139, 69, 19, 0.5)"  # Darker brown
+            ),
+            line=dict(  # Add subtle vertical lines for book spines
+                color="rgba(139, 69, 19, 0.3)",
+                width=1
+            )
+        )
+    )
+    
+    # Add subtle shadow effect
+    fig.update_layout(
+        shapes=[
+            dict(
+                type="rect",
+                xref="paper",
+                yref="paper",
+                x0=0,
+                y0=0,
+                x1=1,
+                y1=0.1,
+                fillcolor="rgba(0,0,0,0.1)",
+                layer="below",
+                line_width=0,
+            )
+        ]
     )
     
     return fig
