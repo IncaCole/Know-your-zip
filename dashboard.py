@@ -84,11 +84,11 @@ def get_apis():
 def get_zip_validator():
     return ZIPValidator()
 
-# Initialize APIs
-apis = get_apis()
-zip_validator = get_zip_validator()
-
 def main():
+    # Get cached instances
+    apis = get_apis()
+    zip_validator = get_zip_validator()
+    
     # Display the charts at the top
     st.header("📊 Miami-Dade County Overview")
     
