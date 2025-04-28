@@ -8,6 +8,8 @@ import plotly.express as px
 import pandas as pd
 from education import EducationAPI
 from src.zip_validator import ZIPValidator
+from emergency_services import EmergencyServicesAPI
+from geopy.distance import geodesic
 
 @st.cache_data
 def get_schools_by_zip():
@@ -125,6 +127,93 @@ def plot_schools_by_type():
         yaxis_title='Number of Schools',
         barmode='stack',
         showlegend=True
+    )
+    
+    return fig
+
+@st.cache_data
+def plot_fire_station_proximity_pie():
+    """
+    Creates and returns a pie chart showing the distribution of ZIP codes
+    based on their proximity to the nearest fire station.
+    """
+    # Initialize APIs
+    emergency_api = EmergencyServicesAPI()
+    zip_validator = ZIPValidator()
+    
+    # Get all ZIP codes and fire stations
+    zip_codes = zip_validator.get_all_zip_codes()
+    fire_stations = emergency_api.get_fire_stations()
+    
+    # Initialize distance categories
+    distance_categories = {
+        '0-5 miles': 0,
+        '5-10 miles': 0,
+        '10-15 miles': 0,
+        '15+ miles': 0
+    }
+    
+    # Calculate distances for each ZIP code
+    for zip_code in zip_codes:
+        zip_coords = zip_validator.get_zip_coordinates(zip_code)
+        if not zip_coords:
+            continue
+            
+        # Find nearest fire station
+        min_distance = float('inf')
+        for station in fire_stations.get('features', []):
+            if 'geometry' in station and station['geometry']:
+                coords = station['geometry']['coordinates']
+                station_coords = (coords[1], coords[0])  # Convert to (lat, lon)
+                distance = geodesic(zip_coords, station_coords).miles
+                min_distance = min(min_distance, distance)
+        
+        # Categorize the ZIP code based on distance
+        if min_distance <= 5:
+            distance_categories['0-5 miles'] += 1
+        elif min_distance <= 10:
+            distance_categories['5-10 miles'] += 1
+        elif min_distance <= 15:
+            distance_categories['10-15 miles'] += 1
+        else:
+            distance_categories['15+ miles'] += 1
+    
+    # Create DataFrame for the pie chart
+    df = pd.DataFrame({
+        'Distance': list(distance_categories.keys()),
+        'ZIP Codes': list(distance_categories.values())
+    })
+    
+    # Create pie chart
+    fig = px.pie(
+        df,
+        values='ZIP Codes',
+        names='Distance',
+        title='ZIP Code Distribution by Fire Station Proximity',
+        color_discrete_sequence=px.colors.sequential.Reds,  # Use red color scheme for fire stations
+        hole=0.3  # Create a donut chart for better visualization
+    )
+    
+    # Update layout for better appearance
+    fig.update_layout(
+        title={
+            'text': 'ZIP Code Distribution by Fire Station Proximity',
+            'y': 0.95,
+            'x': 0.5,
+            'xanchor': 'center',
+            'yanchor': 'top',
+            'font': {'size': 24}
+        },
+        legend_title_text='Distance to Nearest Fire Station',
+        annotations=[
+            dict(
+                text=f'Total ZIP Codes: {sum(distance_categories.values())}',
+                x=0.5,
+                y=0.5,
+                font_size=12,
+                showarrow=False
+            )
+        ]
     )
     
     return fig 

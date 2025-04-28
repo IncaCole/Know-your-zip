@@ -9,7 +9,7 @@ from src.zip_validator import ZIPValidator
 from geopy.geocoders import Nominatim
 from geopy.distance import geodesic
 from infrastructure import BusStopsAPI, LibrariesAPI, ParksAPI
-from charts import plot_schools_histogram
+from charts import plot_schools_histogram, plot_fire_station_proximity_pie
 
 # Initialize APIs
 @st.cache_resource
@@ -35,9 +35,17 @@ apis = get_apis()
 zip_validator = get_zip_validator()
 
 def main():
-    # Display the schools histogram at the top
-    st.header("📊 School Distribution in Miami-Dade County")
-    st.plotly_chart(plot_schools_histogram(), use_container_width=True)
+    # Display the charts at the top in two columns
+    st.header("📊 Miami-Dade County Overview")
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.subheader("School Distribution")
+        st.plotly_chart(plot_schools_histogram(), use_container_width=True)
+    
+    with col2:
+        st.subheader("Fire Station Coverage")
+        st.plotly_chart(plot_fire_station_proximity_pie(), use_container_width=True)
     
     # Create two columns for controls and main content
     control_col, main_col = st.columns([1, 3])
