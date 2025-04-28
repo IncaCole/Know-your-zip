@@ -9,7 +9,7 @@ from src.zip_validator import ZIPValidator
 from geopy.geocoders import Nominatim
 from geopy.distance import geodesic
 from infrastructure import BusStopsAPI, LibrariesAPI, ParksAPI
-from charts import plot_schools_histogram, plot_fire_station_proximity_pie, plot_county_regions
+from charts import plot_schools_histogram, plot_fire_station_proximity_pie, plot_zip_park_density_treemap
 
 def categorize_location(lat: float, lon: float) -> str:
     """
@@ -89,7 +89,7 @@ apis = get_apis()
 zip_validator = get_zip_validator()
 
 def main():
-    # Display the charts at the top in two columns
+    # Display the charts at the top
     st.header("📊 Miami-Dade County Overview")
     
     # Create a row with three columns for the charts
@@ -102,7 +102,7 @@ def main():
         st.plotly_chart(plot_fire_station_proximity_pie(), use_container_width=True)
     
     with col3:
-        st.plotly_chart(plot_county_regions(), use_container_width=True)
+        st.plotly_chart(plot_zip_park_density_treemap(), use_container_width=True)
     
     # Add Parks Distribution Analysis
     st.subheader("🌳 Parks Distribution by Region")

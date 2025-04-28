@@ -5,12 +5,12 @@
 
 import streamlit as st
 import plotly.express as px
-import plotly.graph_objects as go
 import pandas as pd
 from education import EducationAPI
 from src.zip_validator import ZIPValidator
 from emergency_services import EmergencyServicesAPI
 from geopy.distance import geodesic
+from infrastructure import ParksAPI
 
 @st.cache_data
 def get_schools_by_zip():
@@ -232,73 +232,88 @@ def plot_fire_station_proximity_pie():
     
     return fig
 
-def plot_county_regions():
+@st.cache_data
+def plot_zip_park_density_treemap():
     """
-    Creates and returns a figure showing Miami-Dade County shape with region labels and statistics
+    Creates a treemap visualization showing ZIP code sizes with park density indicated by color
     """
-    # Approximate coordinates for Miami-Dade County corners
-    county_shape = [
-        [25.97, -80.14],  # North point
-        [25.97, -80.87],  # Northwest point
-        [25.13, -80.87],  # Southwest point
-        [25.13, -80.14],  # Southeast point
-        [25.97, -80.14]   # Close the shape
-    ]
+    # Initialize APIs
+    zip_validator = ZIPValidator()
+    parks_api = ParksAPI()
     
-    # Create the base figure
-    fig = go.Figure()
+    # Get all ZIP codes and their areas
+    zip_codes = zip_validator.get_all_zip_codes()
     
-    # Add the county outline
-    fig.add_trace(go.Scattergeo(
-        lon=[point[1] for point in county_shape],
-        lat=[point[0] for point in county_shape],
-        mode='lines',
-        line=dict(width=1, color='rgba(47, 69, 56, 0.3)'),  # Thinner, more transparent line
-        fill='toself',
-        fillcolor='rgba(144, 169, 144, 0.3)',  # Keeping the same fill color
-        name='Miami-Dade County'
-    ))
+    # Get all parks
+    parks_data = parks_api.get_all_parks()
     
-    # Add region labels with statistics
-    region_labels = [
-        dict(text="NE<br>118 (18%)", lat=25.85, lon=-80.20),  # Northeast
-        dict(text="SE<br>77 (12%)", lat=25.25, lon=-80.20),   # Southeast
-        dict(text="SW<br>452 (70%)", lat=25.25, lon=-80.75)   # Southwest
-    ]
+    # Initialize data structure
+    zip_data = {
+        'ZIP_Code': [],
+        'Area': [],  # Area in square miles
+        'Park_Count': [],
+        'Parks_per_SqMile': []
+    }
     
-    for label in region_labels:
-        fig.add_trace(go.Scattergeo(
-            lon=[label['lon']],
-            lat=[label['lat']],
-            text=[label['text']],
-            mode='text',
-            textfont=dict(size=16, color='#2F4538', family='Arial Black'),  # Keeping text color the same
-            name=label['text']
-        ))
+    # Calculate park counts and densities for each ZIP
+    for zip_code in zip_codes:
+        # Get ZIP code area (approximate using bounding box for now)
+        zip_area = zip_validator.get_zip_area(zip_code)
+        
+        # Count parks in this ZIP
+        park_count = 0
+        if parks_data and 'features' in parks_data:
+            for park in parks_data['features']:
+                if 'geometry' in park and park['geometry']:
+                    coords = park['geometry']['coordinates']
+                    # Check if park is in this ZIP code
+                    if zip_validator.is_point_in_zip(coords[1], coords[0], zip_code):
+                        park_count += 1
+        
+        # Add to data structure
+        zip_data['ZIP_Code'].append(zip_code)
+        zip_data['Area'].append(zip_area)
+        zip_data['Park_Count'].append(park_count)
+        zip_data['Parks_per_SqMile'].append(park_count / zip_area if zip_area > 0 else 0)
     
-    # Update layout
+    # Create DataFrame
+    df = pd.DataFrame(zip_data)
+    
+    # Create treemap
+    fig = px.treemap(
+        df,
+        path=[px.Constant("Miami-Dade"), 'ZIP_Code'],
+        values='Area',
+        color='Park_Count',
+        color_continuous_scale='Greens',
+        title='ZIP Code Areas and Park Density',
+        custom_data=['Park_Count', 'Parks_per_SqMile']
+    )
+    
+    # Update layout and hover template
+    fig.update_traces(
+        hovertemplate="""
+        ZIP Code: %{label}<br>
+        Area: %{value:.1f} sq mi<br>
+        Parks: %{customdata[0]}<br>
+        Parks per sq mi: %{customdata[1]:.1f}<br>
+        <extra></extra>
+        """,
+        textinfo="label+value",
+        texttemplate="<b>%{label}</b><br>%{value:.1f} sq mi"
+    )
+    
     fig.update_layout(
         title={
-            'text': 'Park Locations',
+            'text': 'ZIP Code Areas and Park Density',
             'y': 0.95,
             'x': 0.5,
             'xanchor': 'center',
             'yanchor': 'top',
             'font': {'size': 24}
         },
-        showlegend=False,
-        geo=dict(
-            scope='usa',
-            projection_scale=20,  # Zoom level
-            center=dict(lat=25.55, lon=-80.5),  # Center of the map
-            showland=True,
-            landcolor='rgb(243, 243, 243)',
-            showcoastlines=True,
-            coastlinecolor='rgba(80, 80, 80, 0.2)',  # Making coastlines more transparent too
-            showframe=False
-        ),
-        height=450,  # Reduced height to match other charts
-        margin=dict(l=0, r=0, t=30, b=0)  # Reduced top margin
+        height=450,
+        margin=dict(l=0, r=0, t=50, b=0)
     )
     
     return fig 
