@@ -25,6 +25,7 @@ class ZIPValidator:
         Returns:
             List[Dict]: List of ZIP code data dictionaries
         """
+        print(f"Fetching ZIP data from {self.api_endpoint}")  # Debug log
         params = {
             'where': '1=1',
             'outFields': '*',
@@ -32,14 +33,24 @@ class ZIPValidator:
         }
         
         try:
+            print("Sending request to API...")  # Debug log
             response = requests.get(self.api_endpoint, params=params)
             response.raise_for_status()
             data = response.json()
             
             if 'features' in data:
+                print(f"Successfully fetched {len(data['features'])} features from API")  # Debug log
                 return data['features']
+            else:
+                print("No 'features' found in API response")  # Debug log
+                print(f"API response keys: {list(data.keys())}")  # Debug log
+        except requests.exceptions.RequestException as e:
+            print(f"Request error fetching ZIP data: {str(e)}")  # Debug log
+        except json.JSONDecodeError as e:
+            print(f"JSON decode error fetching ZIP data: {str(e)}")  # Debug log
+            print(f"Response content: {response.text[:200]}...")  # Debug log first 200 chars
         except Exception as e:
-            print(f"Error fetching ZIP data: {str(e)}")
+            print(f"Error fetching ZIP data: {str(e)}")  # Debug log
         
         return []
 
@@ -62,7 +73,9 @@ class ZIPValidator:
 
     def refresh_zip_database(self):
         """Refresh the ZIP code database with latest data from API"""
+        print("Starting ZIP database refresh...")  # Debug log
         features = self.fetch_zip_data()
+        print(f"Fetched {len(features)} ZIP features from API")  # Debug log
         
         for feature in features:
             props = feature.get('properties', {})
@@ -76,13 +89,16 @@ class ZIPValidator:
                     # Calculate centroid based on geometry type
                     if geom['type'] == 'Polygon':
                         center_lat, center_lon = self.calculate_polygon_centroid(coords[0])
+                        print(f"Processed Polygon ZIP {zip_code}: center at ({center_lat}, {center_lon})")  # Debug log
                     elif geom['type'] == 'Point':
                         center_lat, center_lon = coords[1], coords[0]
+                        print(f"Processed Point ZIP {zip_code}: center at ({center_lat}, {center_lon})")  # Debug log
                     elif geom['type'] == 'MultiPolygon':
                         # Use the first polygon for the centroid
                         center_lat, center_lon = self.calculate_polygon_centroid(coords[0][0])
+                        print(f"Processed MultiPolygon ZIP {zip_code}: center at ({center_lat}, {center_lon})")  # Debug log
                     else:
-                        print(f"Unsupported geometry type: {geom['type']}")
+                        print(f"Unsupported geometry type: {geom['type']} for ZIP {zip_code}")  # Debug log
                         continue
                     
                     self.zip_database[zip_code] = {
@@ -93,6 +109,8 @@ class ZIPValidator:
                     }
                 except Exception as e:
                     print(f"Error processing ZIP code {zip_code}: {str(e)}")
+        
+        print(f"ZIP database refresh complete. Total ZIPs: {len(self.zip_database)}")  # Debug log
 
     def validate_format(self, zip_code: str) -> bool:
         """
@@ -293,19 +311,26 @@ class ZIPValidator:
         Returns:
             Optional[str]: The closest ZIP code if found, None otherwise
         """
+        print(f"Finding closest ZIP to coordinates: {coordinates}")  # Debug log
+        
         if not coordinates or len(coordinates) != 2:
+            print("Invalid coordinates provided")  # Debug log
             return None
             
         lat, lon = coordinates
         # Check if coordinates are within Miami-Dade County bounds (with some padding)
         if not (24.8 <= lat <= 26.2 and -81.0 <= lon <= -79.8):
+            print(f"Coordinates ({lat}, {lon}) outside Miami-Dade County bounds")  # Debug log
             return None
             
+        print(f"ZIP database has {len(self.zip_database)} entries")  # Debug log
+        
         closest_zip = None
         min_distance = float('inf')
         
         for zip_code, data in self.zip_database.items():
             if 'center' not in data:
+                print(f"No center coordinates for ZIP {zip_code}")  # Debug log
                 continue
                 
             zip_center = data['center']
@@ -314,11 +339,15 @@ class ZIPValidator:
                 if distance < min_distance:
                     min_distance = distance
                     closest_zip = zip_code
+                    print(f"New closest ZIP: {zip_code} at {distance:.2f} miles")  # Debug log
             except Exception as e:
-                print(f"Error calculating distance for ZIP {zip_code}: {str(e)}")
+                print(f"Error calculating distance for ZIP {zip_code}: {str(e)}")  # Debug log
                 continue
         
         # Only return if we found a reasonably close ZIP code (within 10 miles)
         if closest_zip and min_distance <= 10:
+            print(f"Found closest ZIP {closest_zip} at {min_distance:.2f} miles")  # Debug log
             return closest_zip
+        else:
+            print(f"No ZIP codes found within 10 miles (closest was {min_distance:.2f} miles away)")  # Debug log
         return None 
