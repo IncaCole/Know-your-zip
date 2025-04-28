@@ -279,7 +279,7 @@ def plot_county_regions():
     # Update layout
     fig.update_layout(
         title={
-            'text': 'Miami-Dade County Regions',
+            'text': 'Park Locations',
             'y': 0.95,
             'x': 0.5,
             'xanchor': 'center',
