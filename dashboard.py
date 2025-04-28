@@ -11,6 +11,7 @@ from geopy.exc import GeocoderTimedOut, GeocoderServiceError
 from geopy.distance import geodesic
 from infrastructure import BusStopsAPI, LibrariesAPI, ParksAPI
 from charts import plot_schools_histogram, plot_fire_station_proximity_pie, plot_zip_park_density_treemap
+import time
 
 def categorize_location(lat: float, lon: float) -> str:
     """
@@ -428,10 +429,28 @@ def main():
                         # Add retry mechanism for geocoding
                         def do_geocode(address, attempt=1, max_attempts=3):
                             try:
-                                return geolocator.geocode(address)
+                                # Append Miami-Dade, FL to the address if not already specified
+                                if 'miami' not in address.lower() and 'fl' not in address.lower():
+                                    address = f"{address}, Miami-Dade County, FL"
+                                location = geolocator.geocode(address)
+                                
+                                # Verify the coordinates are within Miami-Dade County bounds
+                                # Using more lenient bounds to account for edge cases
+                                if location:
+                                    lat, lon = location.latitude, location.longitude
+                                    # Expanded Miami-Dade County bounds
+                                    if not (24.8 <= lat <= 26.2 and -81.0 <= lon <= -79.8):
+                                        # Try with more specific address
+                                        modified_address = f"{address}, Miami, FL"
+                                        location = geolocator.geocode(modified_address)
+                                        if location:
+                                            lat, lon = location.latitude, location.longitude
+                                            if not (24.8 <= lat <= 26.2 and -81.0 <= lon <= -79.8):
+                                                return None
+                                return location
                             except (GeocoderTimedOut, GeocoderServiceError) as e:
                                 if attempt <= max_attempts:
-                                    st.warning(f"Retrying geocoding... Attempt {attempt} of {max_attempts}")
+                                    time.sleep(1)  # Add a small delay between retries
                                     return do_geocode(address, attempt + 1, max_attempts)
                                 else:
                                     raise e
@@ -552,31 +571,36 @@ def main():
                                             nearby_data['infrastructure'].append(park)
                             
                             # Get schools from nearby ZIP codes
-                            # First, find the closest ZIP code to the coordinates
-                            closest_zip = zip_validator.get_closest_zip(coordinates)
-                            if closest_zip:
-                                nearby_zips = zip_validator.get_nearby_zips(closest_zip, radius)
-                                for zip_code in nearby_zips:
-                                    if show_public_schools:
-                                        schools = apis['Education'].get_schools_by_zip(zip_code, 'public')
-                                        if schools and schools.get('success'):
-                                            for school in schools['data'].get('schools', []):
-                                                school['school_type'] = 'public'
-                                                nearby_data['schools'].append(school)
-                                    
-                                    if show_private_schools:
-                                        schools = apis['Education'].get_schools_by_zip(zip_code, 'private')
-                                        if schools and schools.get('success'):
-                                            for school in schools['data'].get('schools', []):
-                                                school['school_type'] = 'private'
-                                                nearby_data['schools'].append(school)
-                                    
-                                    if show_charter_schools:
-                                        schools = apis['Education'].get_schools_by_zip(zip_code, 'charter')
-                                        if schools and schools.get('success'):
-                                            for school in schools['data'].get('schools', []):
-                                                school['school_type'] = 'charter'
-                                                nearby_data['schools'].append(school)
+                            try:
+                                # First, find the closest ZIP code to the coordinates
+                                closest_zip = zip_validator.get_closest_zip(coordinates)
+                                if closest_zip:
+                                    nearby_zips = zip_validator.get_nearby_zips(closest_zip, radius)
+                                    for zip_code in nearby_zips:
+                                        if show_public_schools:
+                                            schools = apis['Education'].get_schools_by_zip(zip_code, 'public')
+                                            if schools and schools.get('success'):
+                                                for school in schools['data'].get('schools', []):
+                                                    school['school_type'] = 'public'
+                                                    nearby_data['schools'].append(school)
+                                        
+                                        if show_private_schools:
+                                            schools = apis['Education'].get_schools_by_zip(zip_code, 'private')
+                                            if schools and schools.get('success'):
+                                                for school in schools['data'].get('schools', []):
+                                                    school['school_type'] = 'private'
+                                                    nearby_data['schools'].append(school)
+                                        
+                                        if show_charter_schools:
+                                            schools = apis['Education'].get_schools_by_zip(zip_code, 'charter')
+                                            if schools and schools.get('success'):
+                                                for school in schools['data'].get('schools', []):
+                                                    school['school_type'] = 'charter'
+                                                    nearby_data['schools'].append(school)
+                            except AttributeError:
+                                st.warning("Could not retrieve school data - ZIP code lookup failed")
+                            except Exception as e:
+                                st.warning(f"Error retrieving school data: {str(e)}")
                             
                             # Create analysis tabs
                             tab1, tab2, tab3 = st.tabs([
