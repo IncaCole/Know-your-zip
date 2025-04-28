@@ -53,7 +53,8 @@ def get_schools_by_zip():
 
 def plot_schools_histogram():
     """
-    Creates and returns a histogram showing the distribution of schools across ZIP codes
+    Creates and returns a histogram showing the distribution of schools across ZIP codes,
+    styled to look like stacks of books
     """
     # Get the school counts data
     df = get_schools_by_zip()
@@ -65,8 +66,25 @@ def plot_schools_histogram():
         nbins=6,
         title='School Distribution',
         labels={'Total_Schools': 'Number of Schools', 'count': 'Number of ZIPs'},
-        category_orders={'Total_Schools': sorted(df['Total_Schools'].unique())},  # Sort bins by value
-        text_auto=True  # Enable automatic text display
+        category_orders={'Total_Schools': sorted(df['Total_Schools'].unique())},
+        text_auto=True
+    )
+    
+    # Update traces to look like stacks of books
+    fig.update_traces(
+        marker=dict(
+            color='#8B4513',  # Saddle brown color for books
+            pattern=dict(
+                shape="\\",  # Diagonal lines for book spine texture
+                fillmode="overlay",
+                size=8,
+                solidity=0.7,
+                fgcolor="rgba(255, 250, 240, 0.5)"  # Floral white for book spine details
+            )
+        ),
+        textposition='inside',
+        textfont=dict(size=14, color='floralwhite'),  # Light text color
+        insidetextanchor='middle'
     )
     
     # Update layout for better appearance
@@ -83,14 +101,15 @@ def plot_schools_histogram():
             'xanchor': 'center',
             'yanchor': 'top',
             'font': {'size': 24}  # Make title larger
-        }
+        },
+        plot_bgcolor='rgba(255, 250, 240, 0.3)',  # Light floral white background
+        paper_bgcolor='white'
     )
     
-    # Update text position to be inside the bars
+    # Add a border effect to make bars look more like book stacks
     fig.update_traces(
-        textposition='inside',
-        textfont=dict(size=14, color='white'),  # Make text white and larger
-        insidetextanchor='middle'  # Center text in bars
+        marker_line_color='#654321',  # Darker brown for book edges
+        marker_line_width=1.5
     )
     
     return fig
