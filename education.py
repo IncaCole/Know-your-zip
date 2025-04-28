@@ -88,7 +88,12 @@ class EducationAPI:
                 if public_data and 'features' in public_data:
                     for feature in public_data['features']:
                         properties = feature.get('properties', {})
-                        if str(properties.get('ZIPCODE')) == str(zip_code):
+                        # Include schools in the target ZIP code and adjacent ones
+                        feature_zip = str(properties.get('ZIPCODE', '')).strip()
+                        if feature_zip and (feature_zip == str(zip_code) or 
+                            # Include schools with similar ZIP codes (first 3 digits match)
+                            (len(feature_zip) == 5 and len(str(zip_code)) == 5 and 
+                             feature_zip[:3] == str(zip_code)[:3])):
                             properties['school_type'] = 'public'
                             schools.append(properties)
             
@@ -97,7 +102,12 @@ class EducationAPI:
                 if private_data and 'features' in private_data:
                     for feature in private_data['features']:
                         properties = feature.get('properties', {})
-                        if str(properties.get('ZIPCODE')) == str(zip_code):
+                        # Include schools in the target ZIP code and adjacent ones
+                        feature_zip = str(properties.get('ZIPCODE', '')).strip()
+                        if feature_zip and (feature_zip == str(zip_code) or 
+                            # Include schools with similar ZIP codes (first 3 digits match)
+                            (len(feature_zip) == 5 and len(str(zip_code)) == 5 and 
+                             feature_zip[:3] == str(zip_code)[:3])):
                             properties['school_type'] = 'private'
                             schools.append(properties)
             
@@ -106,12 +116,17 @@ class EducationAPI:
                 if charter_data and 'features' in charter_data:
                     for feature in charter_data['features']:
                         properties = feature.get('properties', {})
-                        if str(properties.get('ZIPCODE')) == str(zip_code):
+                        # Include schools in the target ZIP code and adjacent ones
+                        feature_zip = str(properties.get('ZIPCODE', '')).strip()
+                        if feature_zip and (feature_zip == str(zip_code) or 
+                            # Include schools with similar ZIP codes (first 3 digits match)
+                            (len(feature_zip) == 5 and len(str(zip_code)) == 5 and 
+                             feature_zip[:3] == str(zip_code)[:3])):
                             properties['school_type'] = 'charter'
                             schools.append(properties)
             
             return success_response(
-                message=f"Found {len(schools)} schools in ZIP code {zip_code}",
+                message=f"Found {len(schools)} schools in and around ZIP code {zip_code}",
                 data={'schools': schools}
             )
         except Exception as e:
