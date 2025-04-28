@@ -9,7 +9,61 @@ from src.zip_validator import ZIPValidator
 from geopy.geocoders import Nominatim
 from geopy.distance import geodesic
 from infrastructure import BusStopsAPI, LibrariesAPI, ParksAPI
-from charts import plot_schools_histogram, plot_fire_station_proximity_pie
+from charts import plot_schools_histogram, plot_fire_station_proximity_pie, plot_county_regions
+
+def categorize_location(lat: float, lon: float) -> str:
+    """
+    Categorize a location into one of Miami-Dade's regions based on coordinates.
+    
+    Approximate boundaries:
+    - Northeast: North of 25.8500°N and East of -80.2000°W
+    - Southeast: South of 25.8500°N and East of -80.2000°W
+    - Southwest: South of 25.8500°N and West of -80.2000°W
+    - Northwest: North of 25.8500°N and West of -80.2000°W
+    """
+    if lat >= 25.8500:  # North
+        if lon >= -80.2000:  # East
+            return "Northeast"
+        else:
+            return "Northwest"
+    else:  # South
+        if lon >= -80.2000:  # East
+            return "Southeast"
+        else:
+            return "Southwest"
+
+def analyze_parks_distribution(parks_api):
+    """Analyze the distribution of parks across Miami-Dade County regions."""
+    # Get all parks
+    parks_data = parks_api.get_all_parks()
+    
+    # Initialize counters for each region
+    region_counts = {
+        "Northeast": 0,
+        "Southeast": 0,
+        "Southwest": 0,
+        "Northwest": 0
+    }
+    
+    # Initialize lists to store parks in each region
+    region_parks = {
+        "Northeast": [],
+        "Southeast": [],
+        "Southwest": [],
+        "Northwest": []
+    }
+    
+    if parks_data and 'features' in parks_data:
+        for park in parks_data['features']:
+            if 'geometry' in park and park['geometry']:
+                coords = park['geometry']['coordinates']
+                # GeoJSON uses [longitude, latitude] order
+                lon, lat = coords[0], coords[1]
+                region = categorize_location(lat, lon)
+                region_counts[region] += 1
+                region_parks[region].append(park['properties'].get('NAME', 'Unnamed Park'))
+    
+    return region_counts, region_parks
 
 # Initialize APIs
 @st.cache_resource
@@ -37,13 +91,43 @@ zip_validator = get_zip_validator()
 def main():
     # Display the charts at the top in two columns
     st.header("📊 Miami-Dade County Overview")
-    col1, col2 = st.columns(2)
+    
+    # Create a row with three columns for the charts
+    col1, col2, col3 = st.columns(3)
     
     with col1:
         st.plotly_chart(plot_schools_histogram(), use_container_width=True)
     
     with col2:
         st.plotly_chart(plot_fire_station_proximity_pie(), use_container_width=True)
+    
+    with col3:
+        st.plotly_chart(plot_county_regions(), use_container_width=True)
+    
+    # Add Parks Distribution Analysis
+    st.subheader("🌳 Parks Distribution by Region")
+    counts, parks = analyze_parks_distribution(apis['Infrastructure']['Parks'])
+    
+    # Create columns for metrics
+    cols = st.columns(4)
+    for i, (region, count) in enumerate(counts.items()):
+        with cols[i]:
+            st.metric(f"{region}", count)
+    
+    # Create a pie chart for parks distribution
+    df = pd.DataFrame({
+        'Region': list(counts.keys()),
+        'Number of Parks': list(counts.values())
+    })
+    
+    fig = px.pie(
+        df,
+        values='Number of Parks',
+        names='Region',
+        title='Parks Distribution Across Miami-Dade County',
+        color_discrete_sequence=px.colors.qualitative.Set3
+    )
+    st.plotly_chart(fig, use_container_width=True)
     
     # Create two columns for controls and main content
     control_col, main_col = st.columns([1, 3])
