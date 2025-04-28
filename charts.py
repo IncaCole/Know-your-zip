@@ -54,7 +54,7 @@ def get_schools_by_zip():
 def plot_schools_histogram():
     """
     Creates and returns a histogram showing the distribution of schools across ZIP codes,
-    styled to look like realistic stacks of books
+    styled to look like books viewed from a shelf angle
     """
     # Get the school counts data
     df = get_schools_by_zip()
@@ -70,26 +70,36 @@ def plot_schools_histogram():
         text_auto=True
     )
     
-    # Update traces to look like stacks of books
+    # Update traces to look like angled books
     fig.update_traces(
+        # Main bar represents the book spine
         marker=dict(
-            color='#D4B08C',  # Base book color (light brown)
+            color='#8B4513',  # Dark brown for book spine
             pattern=dict(
-                shape="-",  # Horizontal lines to represent individual books
+                shape="/",  # Diagonal lines for leather texture
                 fillmode="overlay",
-                size=4,  # Size of the pattern (representing book thickness)
-                solidity=0.9,
-                fgcolor="rgba(139, 69, 19, 0.5)"  # Darker brown for book edges
+                size=3,
+                solidity=0.3,
+                fgcolor="rgba(218, 165, 32, 0.4)"  # Gold color for spine details
+            ),
+            line=dict(
+                color='#654321',  # Darker brown for spine edges
+                width=2
             )
         ),
         textposition='inside',
-        textfont=dict(size=14, color='#2F1810'),  # Dark brown text
-        insidetextanchor='middle'
+        textfont=dict(
+            size=14, 
+            color='#FFD700',  # Gold color for text
+            family='Times New Roman'
+        ),
+        insidetextanchor='middle',
+        width=0.7  # Make bars slightly thinner to look more like books
     )
     
     # Update layout for better appearance
     fig.update_layout(
-        bargap=0.2,  # Increased gap between bars
+        bargap=0.5,  # Increased gap between bars to show "books" better
         xaxis_title='Number of Schools per ZIP',
         yaxis_title='Number of ZIPs',
         showlegend=False,
@@ -102,48 +112,48 @@ def plot_schools_histogram():
             'yanchor': 'top',
             'font': {'size': 24}
         },
-        plot_bgcolor='rgba(253, 245, 230, 0.5)',  # Old lace color for background
+        plot_bgcolor='rgba(245, 245, 245, 0.8)',  # Light gray background
         paper_bgcolor='white'
     )
     
-    # Add multiple border effects to create book edges
-    fig.update_traces(
-        marker_line_color='#8B4513',  # Saddle brown for edges
-        marker_line_width=2,  # Thicker border for more defined books
-        # Add a second pattern layer for more texture
-        marker=dict(
-            color='#D4B08C',  # Base color
-            pattern=dict(
-                shape="-",  # Horizontal lines
-                fillmode="overlay",
-                size=4,
-                solidity=0.9,
-                fgcolor="rgba(139, 69, 19, 0.5)"  # Darker brown
-            ),
-            line=dict(  # Add subtle vertical lines for book spines
-                color="rgba(139, 69, 19, 0.3)",
-                width=1
-            )
-        )
-    )
+    # Add shapes to create the "pages" effect on the right side of each bar
+    hist_data = df['Total_Schools'].value_counts().sort_index()
+    bar_positions = sorted(df['Total_Schools'].unique())
+    max_count = hist_data.max()
     
-    # Add subtle shadow effect
-    fig.update_layout(
-        shapes=[
-            dict(
-                type="rect",
-                xref="paper",
-                yref="paper",
-                x0=0,
-                y0=0,
-                x1=1,
-                y1=0.1,
-                fillcolor="rgba(0,0,0,0.1)",
-                layer="below",
-                line_width=0,
+    for i, pos in enumerate(bar_positions):
+        count = hist_data[pos]
+        # Add a lighter rectangle for pages
+        fig.add_shape(
+            type="path",
+            path=f"M {pos+0.35} 0 L {pos+0.35} {count} L {pos+0.5} {count-1} L {pos+0.5} 1 Z",
+            fillcolor='#F5F5F5',  # Off-white for pages
+            line=dict(color='#D3D3D3', width=1),
+            layer='below'
+        )
+        # Add lines to represent individual pages
+        for j in range(5):  # Add 5 line details for pages
+            y_offset = j * (count/6)
+            fig.add_shape(
+                type="line",
+                x0=pos+0.35,
+                y0=y_offset,
+                x1=pos+0.5,
+                y1=max(0, y_offset-1),
+                line=dict(color='#D3D3D3', width=0.5),
+                layer='below'
             )
-        ]
-    )
+    
+    # Add shadow effect under each "book"
+    for pos in bar_positions:
+        count = hist_data[pos]
+        fig.add_shape(
+            type="path",
+            path=f"M {pos-0.35} 0 L {pos+0.5} 0 L {pos+0.5} 0.5 L {pos-0.35} 0.5 Z",
+            fillcolor='rgba(0,0,0,0.1)',
+            line=dict(width=0),
+            layer='below'
+        )
     
     return fig
 
