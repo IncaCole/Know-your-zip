@@ -369,12 +369,14 @@ def plot_schools_by_grade():
     # Group by grade level and school type
     df_grouped = df.groupby(['Grade_Level', 'School_Type'])['School_Count'].sum().reset_index()
     
-    # Sort grade levels in a logical order
+    # Define the complete grade level order
     grade_order = ['PK', 'K', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12']
+    
+    # Convert Grade_Level to categorical with the specified order
     df_grouped['Grade_Level'] = pd.Categorical(df_grouped['Grade_Level'], categories=grade_order, ordered=True)
     df_grouped = df_grouped.sort_values('Grade_Level')
     
-    # Create area chart
+    # Create area chart with distinct colors for each school type
     fig = px.area(
         df_grouped,
         x='Grade_Level',
@@ -387,9 +389,9 @@ def plot_schools_by_grade():
             'School_Type': 'School Type'
         },
         color_discrete_map={
-            'Public': '#1f77b4',
-            'Private': '#ff7f0e',
-            'Charter': '#2ca02c'
+            'Public': '#1f77b4',  # Blue for public schools
+            'Private': '#ff7f0e',  # Orange for private schools
+            'Charter': '#2ca02c'   # Green for charter schools
         }
     )
     
@@ -405,7 +407,20 @@ def plot_schools_by_grade():
             'xanchor': 'center',
             'yanchor': 'top',
             'font': {'size': 24}
-        }
+        },
+        legend=dict(
+            title='School Type',
+            yanchor="top",
+            y=0.99,
+            xanchor="left",
+            x=1.05
+        )
+    )
+    
+    # Update traces for better visibility
+    fig.update_traces(
+        line=dict(width=2),
+        opacity=0.7
     )
     
     return fig 
