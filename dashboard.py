@@ -40,11 +40,9 @@ def main():
     col1, col2 = st.columns(2)
     
     with col1:
-        st.subheader("School Distribution")
         st.plotly_chart(plot_schools_histogram(), use_container_width=True)
     
     with col2:
-        st.subheader("Fire Station Coverage")
         st.plotly_chart(plot_fire_station_proximity_pie(), use_container_width=True)
     
     # Create two columns for controls and main content
