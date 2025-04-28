@@ -177,29 +177,95 @@ def main():
                                 }
                             }
                             
-                            # Get schools
-                            nearby_zips = zip_validator.get_nearby_zips(location_input, radius)
-                            for zip_code in nearby_zips:
-                                if show_public_schools:
-                                    schools = apis['Education'].get_schools_by_zip(zip_code, 'public')
-                                    if schools and schools.get('success'):
-                                        for school in schools['data'].get('schools', []):
-                                            school['school_type'] = 'public'
-                                            nearby_data['schools'].append(school)
-                                
-                                if show_private_schools:
-                                    schools = apis['Education'].get_schools_by_zip(zip_code, 'private')
-                                    if schools and schools.get('success'):
-                                        for school in schools['data'].get('schools', []):
-                                            school['school_type'] = 'private'
-                                            nearby_data['schools'].append(school)
-                                
-                                if show_charter_schools:
-                                    schools = apis['Education'].get_schools_by_zip(zip_code, 'charter')
-                                    if schools and schools.get('success'):
-                                        for school in schools['data'].get('schools', []):
-                                            school['school_type'] = 'charter'
-                                            nearby_data['schools'].append(school)
+                            # Get schools from nearby ZIP codes
+                            try:
+                                # First, find the closest ZIP code to the coordinates
+                                closest_zip = zip_validator.get_closest_zip(coordinates)
+                                if closest_zip:
+                                    st.success(f"Found closest ZIP code: {closest_zip}")
+                                    nearby_zips = zip_validator.get_nearby_zips(closest_zip, radius)
+                                    if nearby_zips:
+                                        st.success(f"Found {len(nearby_zips)} nearby ZIP codes: {', '.join(nearby_zips)}")
+                                        school_count = 0
+                                        
+                                        # Get schools from each nearby ZIP code
+                                        for zip_code in nearby_zips:
+                                            if show_public_schools:
+                                                try:
+                                                    schools = apis['Education'].get_schools_by_zip(zip_code, 'public')
+                                                    st.write(f"Debug - Public schools response: {schools}")  # Debug log
+                                                    if schools and schools.get('success'):
+                                                        for school in schools.get('data', {}).get('schools', []):
+                                                            # Calculate distance to school
+                                                            if 'geometry' in school and school['geometry']:
+                                                                school_coords = school['geometry']['coordinates']
+                                                                st.write(f"Debug - School coordinates for {school['NAME']}: {school_coords}")  # Debug log
+                                                                school_coords = (school_coords[1], school_coords[0])  # Convert to (lat, lon)
+                                                                distance = geodesic(coordinates, school_coords).miles
+                                                                st.write(f"Debug - Distance to {school['NAME']}: {distance} miles")  # Debug log
+                                                                if distance <= radius:
+                                                                    school['school_type'] = 'public'
+                                                                    nearby_data['schools'].append(school)
+                                                                    school_count += 1
+                                                            else:
+                                                                st.warning(f"No geometry data for school: {school['NAME']}")  # Debug log
+                                                except Exception as e:
+                                                    st.warning(f"Error fetching public schools for ZIP {zip_code}: {str(e)}")
+                                            
+                                            if show_private_schools:
+                                                try:
+                                                    schools = apis['Education'].get_schools_by_zip(zip_code, 'private')
+                                                    st.write(f"Debug - Private schools response: {schools}")  # Debug log
+                                                    if schools and schools.get('success'):
+                                                        for school in schools.get('data', {}).get('schools', []):
+                                                            # Calculate distance to school
+                                                            if 'geometry' in school and school['geometry']:
+                                                                school_coords = school['geometry']['coordinates']
+                                                                st.write(f"Debug - School coordinates for {school['NAME']}: {school_coords}")  # Debug log
+                                                                school_coords = (school_coords[1], school_coords[0])  # Convert to (lat, lon)
+                                                                distance = geodesic(coordinates, school_coords).miles
+                                                                st.write(f"Debug - Distance to {school['NAME']}: {distance} miles")  # Debug log
+                                                                if distance <= radius:
+                                                                    school['school_type'] = 'private'
+                                                                    nearby_data['schools'].append(school)
+                                                                    school_count += 1
+                                                            else:
+                                                                st.warning(f"No geometry data for school: {school['NAME']}")  # Debug log
+                                                except Exception as e:
+                                                    st.warning(f"Error fetching private schools for ZIP {zip_code}: {str(e)}")
+                                            
+                                            if show_charter_schools:
+                                                try:
+                                                    schools = apis['Education'].get_schools_by_zip(zip_code, 'charter')
+                                                    st.write(f"Debug - Charter schools response: {schools}")  # Debug log
+                                                    if schools and schools.get('success'):
+                                                        for school in schools.get('data', {}).get('schools', []):
+                                                            # Calculate distance to school
+                                                            if 'geometry' in school and school['geometry']:
+                                                                school_coords = school['geometry']['coordinates']
+                                                                st.write(f"Debug - School coordinates for {school['NAME']}: {school_coords}")  # Debug log
+                                                                school_coords = (school_coords[1], school_coords[0])  # Convert to (lat, lon)
+                                                                distance = geodesic(coordinates, school_coords).miles
+                                                                st.write(f"Debug - Distance to {school['NAME']}: {distance} miles")  # Debug log
+                                                                if distance <= radius:
+                                                                    school['school_type'] = 'charter'
+                                                                    nearby_data['schools'].append(school)
+                                                                    school_count += 1
+                                                            else:
+                                                                st.warning(f"No geometry data for school: {school['NAME']}")  # Debug log
+                                                except Exception as e:
+                                                    st.warning(f"Error fetching charter schools for ZIP {zip_code}: {str(e)}")
+                                        
+                                        if school_count == 0:
+                                            st.warning("No schools found within the specified radius")
+                                        else:
+                                            st.success(f"Found {school_count} schools within {radius} miles")
+                                    else:
+                                        st.warning(f"No nearby ZIP codes found within {radius} miles")
+                                else:
+                                    st.warning("Could not find closest ZIP code for the given coordinates")
+                            except Exception as e:
+                                st.error(f"Error retrieving school data: {str(e)}")
                             
                             # Get healthcare facilities
                             if show_hospitals:
@@ -429,31 +495,34 @@ def main():
                         # Add retry mechanism for geocoding
                         def do_geocode(address, attempt=1, max_attempts=3):
                             try:
-                                # Append Miami-Dade, FL to the address if not already specified
-                                if 'miami' not in address.lower() and 'fl' not in address.lower():
-                                    address = f"{address}, Miami-Dade County, FL"
-                                location = geolocator.geocode(address)
+                                # First try with Miami-Dade County, FL
+                                location = geolocator.geocode(f"{address}, Miami-Dade County, FL")
                                 
-                                # Verify the coordinates are within Miami-Dade County bounds
-                                # Using more lenient bounds to account for edge cases
+                                # If that fails, try with just Miami, FL
+                                if not location:
+                                    location = geolocator.geocode(f"{address}, Miami, FL")
+                                    
                                 if location:
                                     lat, lon = location.latitude, location.longitude
-                                    # Expanded Miami-Dade County bounds
-                                    if not (24.8 <= lat <= 26.2 and -81.0 <= lon <= -79.8):
-                                        # Try with more specific address
-                                        modified_address = f"{address}, Miami, FL"
-                                        location = geolocator.geocode(modified_address)
-                                        if location:
-                                            lat, lon = location.latitude, location.longitude
-                                            if not (24.8 <= lat <= 26.2 and -81.0 <= lon <= -79.8):
-                                                return None
-                                return location
+                                    # Check if coordinates are within Miami-Dade County (with padding)
+                                    if 24.5 <= lat <= 26.5 and -81.5 <= lon <= -79.5:
+                                        return location
+                                    else:
+                                        st.warning(f"Location found ({lat}, {lon}) is outside Miami-Dade County bounds")
+                                        return None
+                                else:
+                                    st.warning(f"Could not find location for address: {address}")
+                                    return None
                             except (GeocoderTimedOut, GeocoderServiceError) as e:
                                 if attempt <= max_attempts:
                                     time.sleep(1)  # Add a small delay between retries
                                     return do_geocode(address, attempt + 1, max_attempts)
                                 else:
-                                    raise e
+                                    st.error(f"Geocoding service error: {str(e)}")
+                                    return None
+                            except Exception as e:
+                                st.error(f"Error geocoding address: {str(e)}")
+                                return None
 
                         location = do_geocode(location_input)
                         
@@ -473,6 +542,96 @@ def main():
                                     'bus_routes': []
                                 }
                             }
+                            
+                            # Get schools from nearby ZIP codes
+                            try:
+                                # First, find the closest ZIP code to the coordinates
+                                closest_zip = zip_validator.get_closest_zip(coordinates)
+                                if closest_zip:
+                                    st.success(f"Found closest ZIP code: {closest_zip}")
+                                    nearby_zips = zip_validator.get_nearby_zips(closest_zip, radius)
+                                    if nearby_zips:
+                                        st.success(f"Found {len(nearby_zips)} nearby ZIP codes: {', '.join(nearby_zips)}")
+                                        school_count = 0
+                                        
+                                        # Get schools from each nearby ZIP code
+                                        for zip_code in nearby_zips:
+                                            if show_public_schools:
+                                                try:
+                                                    schools = apis['Education'].get_schools_by_zip(zip_code, 'public')
+                                                    st.write(f"Debug - Public schools response: {schools}")  # Debug log
+                                                    if schools and schools.get('success'):
+                                                        for school in schools.get('data', {}).get('schools', []):
+                                                            # Calculate distance to school
+                                                            if 'geometry' in school and school['geometry']:
+                                                                school_coords = school['geometry']['coordinates']
+                                                                st.write(f"Debug - School coordinates for {school['NAME']}: {school_coords}")  # Debug log
+                                                                school_coords = (school_coords[1], school_coords[0])  # Convert to (lat, lon)
+                                                                distance = geodesic(coordinates, school_coords).miles
+                                                                st.write(f"Debug - Distance to {school['NAME']}: {distance} miles")  # Debug log
+                                                                if distance <= radius:
+                                                                    school['school_type'] = 'public'
+                                                                    nearby_data['schools'].append(school)
+                                                                    school_count += 1
+                                                            else:
+                                                                st.warning(f"No geometry data for school: {school['NAME']}")  # Debug log
+                                                except Exception as e:
+                                                    st.warning(f"Error fetching public schools for ZIP {zip_code}: {str(e)}")
+                                            
+                                            if show_private_schools:
+                                                try:
+                                                    schools = apis['Education'].get_schools_by_zip(zip_code, 'private')
+                                                    st.write(f"Debug - Private schools response: {schools}")  # Debug log
+                                                    if schools and schools.get('success'):
+                                                        for school in schools.get('data', {}).get('schools', []):
+                                                            # Calculate distance to school
+                                                            if 'geometry' in school and school['geometry']:
+                                                                school_coords = school['geometry']['coordinates']
+                                                                st.write(f"Debug - School coordinates for {school['NAME']}: {school_coords}")  # Debug log
+                                                                school_coords = (school_coords[1], school_coords[0])  # Convert to (lat, lon)
+                                                                distance = geodesic(coordinates, school_coords).miles
+                                                                st.write(f"Debug - Distance to {school['NAME']}: {distance} miles")  # Debug log
+                                                                if distance <= radius:
+                                                                    school['school_type'] = 'private'
+                                                                    nearby_data['schools'].append(school)
+                                                                    school_count += 1
+                                                            else:
+                                                                st.warning(f"No geometry data for school: {school['NAME']}")  # Debug log
+                                                except Exception as e:
+                                                    st.warning(f"Error fetching private schools for ZIP {zip_code}: {str(e)}")
+                                            
+                                            if show_charter_schools:
+                                                try:
+                                                    schools = apis['Education'].get_schools_by_zip(zip_code, 'charter')
+                                                    st.write(f"Debug - Charter schools response: {schools}")  # Debug log
+                                                    if schools and schools.get('success'):
+                                                        for school in schools.get('data', {}).get('schools', []):
+                                                            # Calculate distance to school
+                                                            if 'geometry' in school and school['geometry']:
+                                                                school_coords = school['geometry']['coordinates']
+                                                                st.write(f"Debug - School coordinates for {school['NAME']}: {school_coords}")  # Debug log
+                                                                school_coords = (school_coords[1], school_coords[0])  # Convert to (lat, lon)
+                                                                distance = geodesic(coordinates, school_coords).miles
+                                                                st.write(f"Debug - Distance to {school['NAME']}: {distance} miles")  # Debug log
+                                                                if distance <= radius:
+                                                                    school['school_type'] = 'charter'
+                                                                    nearby_data['schools'].append(school)
+                                                                    school_count += 1
+                                                            else:
+                                                                st.warning(f"No geometry data for school: {school['NAME']}")  # Debug log
+                                                except Exception as e:
+                                                    st.warning(f"Error fetching charter schools for ZIP {zip_code}: {str(e)}")
+                                        
+                                        if school_count == 0:
+                                            st.warning("No schools found within the specified radius")
+                                        else:
+                                            st.success(f"Found {school_count} schools within {radius} miles")
+                                    else:
+                                        st.warning(f"No nearby ZIP codes found within {radius} miles")
+                                else:
+                                    st.warning("Could not find closest ZIP code for the given coordinates")
+                            except Exception as e:
+                                st.error(f"Error retrieving school data: {str(e)}")
                             
                             # Get healthcare facilities
                             if show_hospitals:
@@ -569,45 +728,6 @@ def main():
                                         if geodesic(coordinates, park_coords).miles <= radius:
                                             park['properties']['type'] = 'Park'
                                             nearby_data['infrastructure'].append(park)
-                            
-                            # Get schools from nearby ZIP codes
-                            try:
-                                # First, find the closest ZIP code to the coordinates
-                                closest_zip = zip_validator.get_closest_zip(coordinates)
-                                if closest_zip:
-                                    st.success(f"Found closest ZIP code: {closest_zip}")
-                                    nearby_zips = zip_validator.get_nearby_zips(closest_zip, radius)
-                                    if nearby_zips:
-                                        st.success(f"Found {len(nearby_zips)} nearby ZIP codes")
-                                        for zip_code in nearby_zips:
-                                            if show_public_schools:
-                                                schools = apis['Education'].get_schools_by_zip(zip_code, 'public')
-                                                if schools and schools.get('success'):
-                                                    for school in schools['data'].get('schools', []):
-                                                        school['school_type'] = 'public'
-                                                        nearby_data['schools'].append(school)
-                                            
-                                            if show_private_schools:
-                                                schools = apis['Education'].get_schools_by_zip(zip_code, 'private')
-                                                if schools and schools.get('success'):
-                                                    for school in schools['data'].get('schools', []):
-                                                        school['school_type'] = 'private'
-                                                        nearby_data['schools'].append(school)
-                                            
-                                            if show_charter_schools:
-                                                schools = apis['Education'].get_schools_by_zip(zip_code, 'charter')
-                                                if schools and schools.get('success'):
-                                                    for school in schools['data'].get('schools', []):
-                                                        school['school_type'] = 'charter'
-                                                        nearby_data['schools'].append(school)
-                                    else:
-                                        st.warning(f"No nearby ZIP codes found within {radius} miles of {closest_zip}")
-                                else:
-                                    st.warning("Could not find closest ZIP code for the given coordinates")
-                            except AttributeError as e:
-                                st.warning(f"ZIP code lookup failed: {str(e)}")
-                            except Exception as e:
-                                st.warning(f"Error retrieving school data: {str(e)}")
                             
                             # Create analysis tabs
                             tab1, tab2, tab3 = st.tabs([

@@ -105,7 +105,8 @@ class EducationAPI:
                                 'ZIPCODE': feature_zip,
                                 'PHONE': properties.get('PHONE', ''),
                                 'school_type': 'public',
-                                'GRDLEVEL': properties.get('GRDLEVEL', '')
+                                'GRDLEVEL': properties.get('GRDLEVEL', ''),
+                                'geometry': feature.get('geometry', {})  # Include geometry data
                             }
                             schools.append(school_data)
                             logger.info(f"Found public school: {school_data['NAME']} in ZIP {feature_zip}")
@@ -129,7 +130,8 @@ class EducationAPI:
                                 'ZIPCODE': feature_zip,
                                 'PHONE': properties.get('PHONE', ''),
                                 'school_type': 'private',
-                                'GRDLEVEL': properties.get('GRDLEVEL', '')
+                                'GRDLEVEL': properties.get('GRDLEVEL', ''),
+                                'geometry': feature.get('geometry', {})  # Include geometry data
                             }
                             schools.append(school_data)
                             logger.info(f"Found private school: {school_data['NAME']} in ZIP {feature_zip}")
@@ -153,7 +155,8 @@ class EducationAPI:
                                 'ZIPCODE': feature_zip,
                                 'PHONE': properties.get('PHONE', ''),
                                 'school_type': 'charter',
-                                'GRDLEVEL': properties.get('GRDLEVEL', '')
+                                'GRDLEVEL': properties.get('GRDLEVEL', ''),
+                                'geometry': feature.get('geometry', {})  # Include geometry data
                             }
                             schools.append(school_data)
                             logger.info(f"Found charter school: {school_data['NAME']} in ZIP {feature_zip}")
