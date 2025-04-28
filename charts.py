@@ -234,7 +234,7 @@ def plot_fire_station_proximity_pie():
 
 def plot_county_regions():
     """
-    Creates and returns a figure showing Miami-Dade County shape with region labels and park statistics
+    Creates and returns a figure showing Miami-Dade County shape with region labels and statistics
     """
     # Approximate coordinates for Miami-Dade County corners
     county_shape = [
@@ -297,8 +297,8 @@ def plot_county_regions():
             coastlinecolor='rgb(80, 80, 80)',
             showframe=False
         ),
-        height=600,
-        margin=dict(l=0, r=0, t=50, b=0)
+        height=450,  # Reduced height to match other charts
+        margin=dict(l=0, r=0, t=30, b=0)  # Reduced top margin
     )
     
     return fig 
