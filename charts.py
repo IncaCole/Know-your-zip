@@ -338,6 +338,8 @@ def get_schools_by_grade():
         'School_Count': [],
         'School_Type': []
     }
+    # For debugging: collect raw school data
+    debug_samples = {'Public': [], 'Private': [], 'Charter': []}
     
     def parse_grades(grade_str):
         grade_str = grade_str.upper().replace(' ', '')
@@ -380,14 +382,19 @@ def get_schools_by_grade():
                 schools = schools_data.get('data', {}).get('schools', [])
                 for school in schools:
                     grade_level_str = school.get('GRDLEVEL', '')
+                    # Collect debug sample
+                    if len(debug_samples[school_type]) < 5:
+                        debug_samples[school_type].append(grade_level_str)
                     grades = parse_grades(grade_level_str)
                     for grade in grades:
                         grade_counts['Grade_Level'].append(grade)
                         grade_counts['School_Count'].append(1)
                         grade_counts['School_Type'].append(school_type)
     df = pd.DataFrame(grade_counts)
-    # Debug: Show counts for each school type
+    # Debug: Show counts and sample GRDLEVELs for each school type
     st.write('School type counts:', df['School_Type'].value_counts())
+    for t in school_types:
+        st.write(f"Sample GRDLEVELs for {t} schools:", debug_samples[t])
     return df
 
 def plot_schools_by_grade():
