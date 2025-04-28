@@ -9,7 +9,7 @@ from src.zip_validator import ZIPValidator
 from geopy.geocoders import Nominatim
 from geopy.distance import geodesic
 from infrastructure import BusStopsAPI, LibrariesAPI, ParksAPI
-from charts import plot_schools_histogram, plot_fire_station_proximity_pie, plot_zip_park_density_treemap, plot_bus_stop_distance_heatmap
+from charts import plot_schools_histogram, plot_fire_station_proximity_pie, plot_zip_park_density_treemap
 
 def categorize_location(lat: float, lon: float) -> str:
     """
@@ -84,11 +84,11 @@ def get_apis():
 def get_zip_validator():
     return ZIPValidator()
 
+# Initialize APIs
+apis = get_apis()
+zip_validator = get_zip_validator()
+
 def main():
-    # Get cached instances
-    apis = get_apis()
-    zip_validator = get_zip_validator()
-    
     # Display the charts at the top
     st.header("📊 Miami-Dade County Overview")
     
@@ -103,9 +103,6 @@ def main():
         
     with col3:
         st.plotly_chart(plot_zip_park_density_treemap(), use_container_width=True)
-    
-    # Add bus stop distance heat map below the school distribution bar graph
-    st.plotly_chart(plot_bus_stop_distance_heatmap(zip_validator), use_container_width=True)
     
     # Create two columns for controls and main content
     control_col, main_col = st.columns([1, 3])

@@ -10,7 +10,7 @@ from education import EducationAPI
 from src.zip_validator import ZIPValidator
 from emergency_services import EmergencyServicesAPI
 from geopy.distance import geodesic
-from infrastructure import ParksAPI, BusStopsAPI
+from infrastructure import ParksAPI
 
 @st.cache_data
 def get_schools_by_zip():
@@ -314,91 +314,6 @@ def plot_zip_park_density_treemap():
         height=450,
         margin=dict(l=0, r=0, t=50, b=0),
         showlegend=False  # Keep the color scale legend hidden
-    )
-    
-    return fig 
-
-@st.cache_data(show_spinner=False, ttl=3600)  # Cache for 1 hour
-def plot_bus_stop_distance_heatmap(_zip_validator):
-    """
-    Creates a heat map showing the average distance to the nearest bus stop for each ZIP code
-    
-    Args:
-        _zip_validator: An instance of ZIPValidator to use for ZIP code operations
-    """
-    # Initialize APIs
-    bus_stops_api = BusStopsAPI()
-    
-    # Get all ZIP codes and bus stops
-    zip_codes = _zip_validator.get_all_zip_codes()
-    bus_stops = bus_stops_api.get_all_stops()
-    
-    # Initialize data structure
-    zip_data = {
-        'ZIP_Code': [],
-        'Avg_Distance': []  # Average distance to nearest bus stop in miles
-    }
-    
-    # Calculate average distances for each ZIP code
-    for zip_code in zip_codes:
-        zip_coords = _zip_validator.get_zip_coordinates(zip_code)
-        if not zip_coords:
-            continue
-            
-        # Find distances to all bus stops
-        distances = []
-        for stop in bus_stops.get('features', []):
-            if 'geometry' in stop and stop['geometry']:
-                coords = stop['geometry']['coordinates']
-                stop_coords = (coords[1], coords[0])  # Convert to (lat, lon)
-                distance = geodesic(zip_coords, stop_coords).miles
-                distances.append(distance)
-        
-        # Calculate average distance if we found any bus stops
-        if distances:
-            avg_distance = sum(distances) / len(distances)
-            zip_data['ZIP_Code'].append(zip_code)
-            zip_data['Avg_Distance'].append(avg_distance)
-    
-    # Create DataFrame
-    df = pd.DataFrame(zip_data)
-    
-    # Get GeoJSON data
-    geojson_data = _zip_validator.get_zip_geojson()
-    
-    # Create heat map
-    fig = px.choropleth(
-        df,
-        geojson=geojson_data,
-        locations='ZIP_Code',
-        color='Avg_Distance',
-        color_continuous_scale='Brwnyl',  # Brown to yellow color scale
-        title='Average Distance to Nearest Bus Stop by ZIP Code',
-        labels={'Avg_Distance': 'Average Distance (miles)'}
-    )
-    
-    # Update layout
-    fig.update_layout(
-        title={
-            'text': 'Average Distance to Nearest Bus Stop by ZIP Code',
-            'y': 0.95,
-            'x': 0.5,
-            'xanchor': 'center',
-            'yanchor': 'top',
-            'font': {'size': 24}
-        },
-        height=450,
-        margin=dict(l=0, r=0, t=50, b=0),
-        geo=dict(
-            scope='usa',
-            projection_scale=20,  # Zoom level
-            center=dict(lat=25.55, lon=-80.5),  # Center of the map
-            showland=True,
-            landcolor='rgb(243, 243, 243)',
-            showcoastlines=True,
-            coastlinecolor='rgb(80, 80, 80)',
-            showframe=False
-        )
     )
     
     return fig 
