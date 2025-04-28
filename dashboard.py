@@ -7,6 +7,7 @@ from emergency_services import EmergencyServicesAPI
 from geo_data import GeoDataAPI
 from src.zip_validator import ZIPValidator
 from geopy.geocoders import Nominatim
+from geopy.exc import GeocoderTimedOut, GeocoderServiceError
 from geopy.distance import geodesic
 from infrastructure import BusStopsAPI, LibrariesAPI, ParksAPI
 from charts import plot_schools_histogram, plot_fire_station_proximity_pie, plot_zip_park_density_treemap
@@ -420,15 +421,33 @@ def main():
                                             len(nearby_data['healthcare']),
                                             help="Number of healthcare facilities in your area")
                 else:
-                    # Handle address input
-                    geolocator = Nominatim(user_agent="miami_explorer")
-                    location = geolocator.geocode(location_input)
-                    if location:
-                        st.success(f"Found location: ({location.latitude}, {location.longitude})")
-                        coordinates = (location.latitude, location.longitude)
-                        # Add same analysis as above but using location coordinates
-                    else:
-                        st.error("Could not find the specified address")
+                    # Handle address input with improved geocoding
+                    try:
+                        geolocator = Nominatim(user_agent="miami_explorer", timeout=10)
+                        
+                        # Add retry mechanism for geocoding
+                        def do_geocode(address, attempt=1, max_attempts=3):
+                            try:
+                                return geolocator.geocode(address)
+                            except (GeocoderTimedOut, GeocoderServiceError) as e:
+                                if attempt <= max_attempts:
+                                    st.warning(f"Retrying geocoding... Attempt {attempt} of {max_attempts}")
+                                    return do_geocode(address, attempt + 1, max_attempts)
+                                else:
+                                    raise e
+
+                        location = do_geocode(location_input)
+                        
+                        if location:
+                            st.success(f"Found location: ({location.latitude}, {location.longitude})")
+                            coordinates = (location.latitude, location.longitude)
+                            # Add same analysis as above but using location coordinates
+                        else:
+                            st.error("Could not find the specified address. Please try a more specific address or include city/state.")
+                    except (GeocoderTimedOut, GeocoderServiceError) as e:
+                        st.error(f"Error connecting to geocoding service. Please try again or use a ZIP code instead. Error: {str(e)}")
+                    except Exception as e:
+                        st.error(f"Error processing location: {str(e)}")
             except Exception as e:
                 st.error(f"Error processing location: {str(e)}")
 

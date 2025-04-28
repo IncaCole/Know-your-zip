@@ -321,8 +321,7 @@ def plot_zip_park_density_treemap():
 @st.cache_data
 def get_schools_by_grade():
     """
-    Fetches all schools and returns a DataFrame with grade level distribution (PK, K, 1-12)
-    Handles grade ranges like 'PK-5', 'K-8', etc.
+    Fetches all schools and returns a DataFrame with grade level distribution
     """
     education_api = EducationAPI()
     zip_validator = ZIPValidator()
@@ -330,84 +329,83 @@ def get_schools_by_grade():
     # Get all valid Miami-Dade ZIP codes
     zip_codes = zip_validator.get_all_zip_codes()
     
-    # Define all grade levels
-    all_grades = ['PK', 'K'] + [str(i) for i in range(1, 13)]
-    school_types = ['Public', 'Private', 'Charter']
+    # Initialize dictionary to store grade level counts
     grade_counts = {
         'Grade_Level': [],
         'School_Count': [],
         'School_Type': []
     }
-    # For debugging: collect raw school data
-    debug_samples = {'Public': [], 'Private': [], 'Charter': []}
-    
-    def parse_grades(grade_str):
-        grade_str = grade_str.upper().replace(' ', '')
-        if '-' in grade_str:
-            start, end = grade_str.split('-')
-            grade_map = {'PK': 0, 'K': 1}
-            def grade_to_num(g):
-                if g in grade_map:
-                    return grade_map[g]
-                try:
-                    return int(g) + 1
-                except:
-                    return None
-            s = grade_to_num(start)
-            e = grade_to_num(end)
-            if s is not None and e is not None:
-                grades = []
-                for n in range(s, e+1):
-                    if n == 0:
-                        grades.append('PK')
-                    elif n == 1:
-                        grades.append('K')
-                    else:
-                        grades.append(str(n-1))
-                return grades
-        if grade_str in all_grades:
-            return [grade_str]
-        if ',' in grade_str:
-            return [g for g in grade_str.split(',') if g in all_grades]
-        return []
     
     # Fetch schools for each ZIP code
     for zip_code in zip_codes:
+        # Get schools of each type
+        public_schools = education_api.get_schools_by_zip(zip_code, 'public')
+        private_schools = education_api.get_schools_by_zip(zip_code, 'private')
+        charter_schools = education_api.get_schools_by_zip(zip_code, 'charter')
+        
+        # Process each school type
         for school_type, schools_data in [
-            ('Public', education_api.get_schools_by_zip(zip_code, 'public')),
-            ('Private', education_api.get_schools_by_zip(zip_code, 'private')),
-            ('Charter', education_api.get_schools_by_zip(zip_code, 'charter'))
+            ('Public', public_schools),
+            ('Private', private_schools),
+            ('Charter', charter_schools)
         ]:
             if schools_data and schools_data.get('success'):
-                schools = schools_data.get('data', {}).get('schools', [])
-                for school in schools:
-                    grade_level_str = school.get('GRDLEVEL', '')
-                    # Collect debug sample
-                    if len(debug_samples[school_type]) < 5:
-                        debug_samples[school_type].append(grade_level_str)
-                    grades = parse_grades(grade_level_str)
-                    for grade in grades:
-                        grade_counts['Grade_Level'].append(grade)
+                for school in schools_data.get('data', {}).get('schools', []):
+                    grade_level = school.get('GRDLEVEL', 'Unknown')
+                    if grade_level != 'Unknown':
+                        grade_counts['Grade_Level'].append(grade_level)
                         grade_counts['School_Count'].append(1)
                         grade_counts['School_Type'].append(school_type)
-    df = pd.DataFrame(grade_counts)
-    # Debug: Show counts and sample GRDLEVELs for each school type
-    st.write('School type counts:', df['School_Type'].value_counts())
-    for t in school_types:
-        st.write(f"Sample GRDLEVELs for {t} schools:", debug_samples[t])
-    return df
+    
+    return pd.DataFrame(grade_counts)
 
 def plot_schools_by_grade():
     """
-    Displays a table showing the count of schools for each type (Private, Public, Charter)
+    Creates and returns an area chart showing the distribution of schools across grade levels
     """
+    # Get the grade level data
     df = get_schools_by_grade()
-    # Group by school type and count
-    summary = df.groupby('School_Type').size().reset_index(name='Count')
-    # Ensure all types are present
-    for t in ['Public', 'Private', 'Charter']:
-        if t not in summary['School_Type'].values:
-            summary = pd.concat([summary, pd.DataFrame({'School_Type': [t], 'Count': [0]})], ignore_index=True)
-    summary = summary.sort_values('School_Type')
-    st.subheader('School Counts by Type')
-    st.table(summary) 
+    
+    # Group by grade level and school type
+    df_grouped = df.groupby(['Grade_Level', 'School_Type'])['School_Count'].sum().reset_index()
+    
+    # Sort grade levels in a logical order
+    grade_order = ['PK', 'K', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12']
+    df_grouped['Grade_Level'] = pd.Categorical(df_grouped['Grade_Level'], categories=grade_order, ordered=True)
+    df_grouped = df_grouped.sort_values('Grade_Level')
+    
+    # Create area chart
+    fig = px.area(
+        df_grouped,
+        x='Grade_Level',
+        y='School_Count',
+        color='School_Type',
+        title='School Distribution by Grade Level',
+        labels={
+            'Grade_Level': 'Grade Level',
+            'School_Count': 'Number of Schools',
+            'School_Type': 'School Type'
+        },
+        color_discrete_map={
+            'Public': '#1f77b4',
+            'Private': '#ff7f0e',
+            'Charter': '#2ca02c'
+        }
+    )
+    
+    # Update layout for better appearance
+    fig.update_layout(
+        xaxis_title='Grade Level',
+        yaxis_title='Number of Schools',
+        showlegend=True,
+        title={
+            'text': 'School Distribution by Grade Level',
+            'y': 0.95,
+            'x': 0.5,
+            'xanchor': 'center',
+            'yanchor': 'top',
+            'font': {'size': 24}
+        }
+    )
+    
+    return fig 
