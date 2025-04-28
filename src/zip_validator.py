@@ -4,7 +4,7 @@ import pandas as pd
 from geopy.distance import geodesic
 import requests
 import json
-from shapely.geometry import Polygon, MultiPolygon
+from shapely.geometry import Polygon, MultiPolygon, Point
 
 class ZIPValidator:
     def __init__(self):
@@ -223,4 +223,38 @@ class ZIPValidator:
         except Exception as e:
             print(f"Error calculating area for ZIP {zip_code}: {str(e)}")
         
-        return 1.0  # Default area if calculation fails 
+        return 1.0  # Default area if calculation fails
+
+    def is_point_in_zip(self, lat: float, lon: float, zip_code: str) -> bool:
+        """
+        Check if a point falls within a ZIP code's boundaries.
+        
+        Args:
+            lat (float): Latitude of the point
+            lon (float): Longitude of the point
+            zip_code (str): ZIP code to check
+            
+        Returns:
+            bool: True if point is within ZIP code boundaries, False otherwise
+        """
+        info = self.get_zip_info(zip_code)
+        if not info or 'geometry' not in info:
+            return False
+            
+        try:
+            point = Point(lon, lat)  # GeoJSON uses (lon, lat) order
+            geom = info['geometry']
+            
+            if geom['type'] == 'Polygon':
+                polygon = Polygon(geom['coordinates'][0])
+                return polygon.contains(point)
+            elif geom['type'] == 'MultiPolygon':
+                for poly_coords in geom['coordinates']:
+                    polygon = Polygon(poly_coords[0])
+                    if polygon.contains(point):
+                        return True
+            
+        except Exception as e:
+            print(f"Error checking point in ZIP {zip_code}: {str(e)}")
+        
+        return False 
