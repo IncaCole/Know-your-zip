@@ -4,6 +4,7 @@ import pandas as pd
 from geopy.distance import geodesic
 import requests
 import json
+from shapely.geometry import Polygon, MultiPolygon
 
 class ZIPValidator:
     def __init__(self):
@@ -189,4 +190,37 @@ class ZIPValidator:
         info = self.get_zip_info(zip_code)
         if info:
             return info['center']
-        return None 
+        return None
+
+    def get_zip_area(self, zip_code: str) -> float:
+        """
+        Get the approximate area of a ZIP code in square miles.
+        
+        Args:
+            zip_code (str): The ZIP code to calculate area for
+            
+        Returns:
+            float: Area in square miles, or 1.0 if calculation fails
+        """
+        info = self.get_zip_info(zip_code)
+        if not info or 'geometry' not in info:
+            return 1.0
+            
+        try:
+            geom = info['geometry']
+            if geom['type'] == 'Polygon':
+                coords = geom['coordinates'][0]
+                polygon = Polygon(coords)
+                # Convert square degrees to approximate square miles
+                # at Miami's latitude (25.7617° N)
+                return polygon.area * 4000
+            elif geom['type'] == 'MultiPolygon':
+                total_area = 0
+                for poly_coords in geom['coordinates']:
+                    polygon = Polygon(poly_coords[0])
+                    total_area += polygon.area
+                return total_area * 4000
+        except Exception as e:
+            print(f"Error calculating area for ZIP {zip_code}: {str(e)}")
+        
+        return 1.0  # Default area if calculation fails 
