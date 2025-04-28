@@ -426,6 +426,12 @@ def main():
                     
                     # Remove any "Assistant:" prefix if present
                     bot_response = bot_response.replace("Assistant:", "").strip()
+
+                    # Strip HTML tags from the assistant's response
+                    def strip_html_tags(text):
+                        clean = re.compile('<.*?>')
+                        return re.sub(clean, '', text)
+                    bot_response = strip_html_tags(bot_response)
                     
                     # Add bot response to chat history
                     st.session_state.messages.append({"role": "assistant", "content": bot_response})
