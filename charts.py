@@ -285,7 +285,7 @@ def plot_zip_park_density_treemap():
         path=[px.Constant("Miami-Dade"), 'ZIP_Code'],
         values='Area',
         color='Park_Count',
-        color_continuous_scale='Greens',
+        color_continuous_scale=None,  # Remove color scale
         title='Park Locations and Density',
         custom_data=['Park_Count']
     )
