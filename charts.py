@@ -361,14 +361,11 @@ def get_schools_by_grade():
     # Create DataFrame
     df = pd.DataFrame(grade_counts)
     
-    # Debug information - only show total schools by type
-    st.write("Total schools by type:", df.groupby('School_Type')['School_Count'].sum())
-    
     return df
 
 def plot_schools_by_grade():
     """
-    Creates and returns an area chart showing the distribution of schools across grade levels
+    Creates and returns a line chart showing the distribution of schools across grade levels
     """
     # Get the grade level data
     df = get_schools_by_grade()
@@ -383,8 +380,8 @@ def plot_schools_by_grade():
     df_grouped['Grade_Level'] = pd.Categorical(df_grouped['Grade_Level'], categories=grade_order, ordered=True)
     df_grouped = df_grouped.sort_values('Grade_Level')
     
-    # Create area chart with distinct colors for each school type
-    fig = px.area(
+    # Create line chart with distinct colors for each school type
+    fig = px.line(
         df_grouped,
         x='Grade_Level',
         y='School_Count',
@@ -426,8 +423,9 @@ def plot_schools_by_grade():
     
     # Update traces for better visibility
     fig.update_traces(
-        line=dict(width=2),
-        opacity=0.7
+        line=dict(width=3),
+        mode='lines+markers',  # Add markers to the lines
+        marker=dict(size=8)
     )
     
     return fig 
