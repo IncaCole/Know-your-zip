@@ -145,12 +145,12 @@ def plot_fire_station_proximity_pie():
     zip_codes = zip_validator.get_all_zip_codes()
     fire_stations = emergency_api.get_fire_stations()
     
-    # Initialize distance categories
+    # Initialize distance categories with new ranges
     distance_categories = {
-        '0-5 miles': 0,
-        '5-10 miles': 0,
-        '10-15 miles': 0,
-        '15+ miles': 0
+        '0-1 mile': 0,
+        '2-3 miles': 0,
+        '4-5 miles': 0,
+        '6+ miles': 0
     }
     
     # Calculate distances for each ZIP code
@@ -168,15 +168,15 @@ def plot_fire_station_proximity_pie():
                 distance = geodesic(zip_coords, station_coords).miles
                 min_distance = min(min_distance, distance)
         
-        # Categorize the ZIP code based on distance
-        if min_distance <= 5:
-            distance_categories['0-5 miles'] += 1
-        elif min_distance <= 10:
-            distance_categories['5-10 miles'] += 1
-        elif min_distance <= 15:
-            distance_categories['10-15 miles'] += 1
+        # Categorize the ZIP code based on new distance ranges
+        if min_distance <= 1:
+            distance_categories['0-1 mile'] += 1
+        elif min_distance <= 3:
+            distance_categories['2-3 miles'] += 1
+        elif min_distance <= 5:
+            distance_categories['4-5 miles'] += 1
         else:
-            distance_categories['15+ miles'] += 1
+            distance_categories['6+ miles'] += 1
     
     # Create DataFrame for the pie chart
     df = pd.DataFrame({
