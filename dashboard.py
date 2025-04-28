@@ -575,30 +575,37 @@ def main():
                                 # First, find the closest ZIP code to the coordinates
                                 closest_zip = zip_validator.get_closest_zip(coordinates)
                                 if closest_zip:
+                                    st.success(f"Found closest ZIP code: {closest_zip}")
                                     nearby_zips = zip_validator.get_nearby_zips(closest_zip, radius)
-                                    for zip_code in nearby_zips:
-                                        if show_public_schools:
-                                            schools = apis['Education'].get_schools_by_zip(zip_code, 'public')
-                                            if schools and schools.get('success'):
-                                                for school in schools['data'].get('schools', []):
-                                                    school['school_type'] = 'public'
-                                                    nearby_data['schools'].append(school)
-                                        
-                                        if show_private_schools:
-                                            schools = apis['Education'].get_schools_by_zip(zip_code, 'private')
-                                            if schools and schools.get('success'):
-                                                for school in schools['data'].get('schools', []):
-                                                    school['school_type'] = 'private'
-                                                    nearby_data['schools'].append(school)
-                                        
-                                        if show_charter_schools:
-                                            schools = apis['Education'].get_schools_by_zip(zip_code, 'charter')
-                                            if schools and schools.get('success'):
-                                                for school in schools['data'].get('schools', []):
-                                                    school['school_type'] = 'charter'
-                                                    nearby_data['schools'].append(school)
-                            except AttributeError:
-                                st.warning("Could not retrieve school data - ZIP code lookup failed")
+                                    if nearby_zips:
+                                        st.success(f"Found {len(nearby_zips)} nearby ZIP codes")
+                                        for zip_code in nearby_zips:
+                                            if show_public_schools:
+                                                schools = apis['Education'].get_schools_by_zip(zip_code, 'public')
+                                                if schools and schools.get('success'):
+                                                    for school in schools['data'].get('schools', []):
+                                                        school['school_type'] = 'public'
+                                                        nearby_data['schools'].append(school)
+                                            
+                                            if show_private_schools:
+                                                schools = apis['Education'].get_schools_by_zip(zip_code, 'private')
+                                                if schools and schools.get('success'):
+                                                    for school in schools['data'].get('schools', []):
+                                                        school['school_type'] = 'private'
+                                                        nearby_data['schools'].append(school)
+                                            
+                                            if show_charter_schools:
+                                                schools = apis['Education'].get_schools_by_zip(zip_code, 'charter')
+                                                if schools and schools.get('success'):
+                                                    for school in schools['data'].get('schools', []):
+                                                        school['school_type'] = 'charter'
+                                                        nearby_data['schools'].append(school)
+                                    else:
+                                        st.warning(f"No nearby ZIP codes found within {radius} miles of {closest_zip}")
+                                else:
+                                    st.warning("Could not find closest ZIP code for the given coordinates")
+                            except AttributeError as e:
+                                st.warning(f"ZIP code lookup failed: {str(e)}")
                             except Exception as e:
                                 st.warning(f"Error retrieving school data: {str(e)}")
                             
