@@ -104,31 +104,6 @@ def main():
     with col3:
         st.plotly_chart(plot_zip_park_density_treemap(), use_container_width=True)
     
-    # Add Parks Distribution Analysis
-    st.subheader("🌳 Parks Distribution by Region")
-    counts, parks = analyze_parks_distribution(apis['Infrastructure']['Parks'])
-    
-    # Create columns for metrics
-    cols = st.columns(4)
-    for i, (region, count) in enumerate(counts.items()):
-        with cols[i]:
-            st.metric(f"{region}", count)
-    
-    # Create a pie chart for parks distribution
-    df = pd.DataFrame({
-        'Region': list(counts.keys()),
-        'Number of Parks': list(counts.values())
-    })
-    
-    fig = px.pie(
-        df,
-        values='Number of Parks',
-        names='Region',
-        title='Parks Distribution Across Miami-Dade County',
-        color_discrete_sequence=px.colors.qualitative.Set3
-    )
-    st.plotly_chart(fig, use_container_width=True)
-    
     # Create two columns for controls and main content
     control_col, main_col = st.columns([1, 3])
 
