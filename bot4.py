@@ -348,7 +348,6 @@ def main():
     # Display chat messages
     with col2:
         st.subheader("💬 Chat with AI Assistant")
-        st.markdown('<div class="chat-window">', unsafe_allow_html=True)
         chat_html = '<div class="chat-window">'
         for message in st.session_state.messages:
             if message["role"] == "user":
