@@ -351,7 +351,6 @@ def get_schools_by_grade():
         ]:
             if schools_data and schools_data.get('success'):
                 schools = schools_data.get('data', {}).get('schools', [])
-                st.write(f"Found {len(schools)} {school_type} schools in ZIP {zip_code}")  # Debug line
                 for school in schools:
                     grade_level = school.get('GRDLEVEL', 'Unknown')
                     if grade_level != 'Unknown':
@@ -362,7 +361,7 @@ def get_schools_by_grade():
     # Create DataFrame
     df = pd.DataFrame(grade_counts)
     
-    # Debug information
+    # Debug information - only show total schools by type
     st.write("Total schools by type:", df.groupby('School_Type')['School_Count'].sum())
     
     return df
