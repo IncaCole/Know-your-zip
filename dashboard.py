@@ -455,33 +455,6 @@ def main():
                                 }
                             }
                             
-                            # Get schools from nearby ZIP codes
-                            # First, find the closest ZIP code to the coordinates
-                            closest_zip = zip_validator.get_closest_zip(coordinates)
-                            if closest_zip:
-                                nearby_zips = zip_validator.get_nearby_zips(closest_zip, radius)
-                                for zip_code in nearby_zips:
-                                    if show_public_schools:
-                                        schools = apis['Education'].get_schools_by_zip(zip_code, 'public')
-                                        if schools and schools.get('success'):
-                                            for school in schools['data'].get('schools', []):
-                                                school['school_type'] = 'public'
-                                                nearby_data['schools'].append(school)
-                                    
-                                    if show_private_schools:
-                                        schools = apis['Education'].get_schools_by_zip(zip_code, 'private')
-                                        if schools and schools.get('success'):
-                                            for school in schools['data'].get('schools', []):
-                                                school['school_type'] = 'private'
-                                                nearby_data['schools'].append(school)
-                                    
-                                    if show_charter_schools:
-                                        schools = apis['Education'].get_schools_by_zip(zip_code, 'charter')
-                                        if schools and schools.get('success'):
-                                            for school in schools['data'].get('schools', []):
-                                                school['school_type'] = 'charter'
-                                                nearby_data['schools'].append(school)
-                            
                             # Get healthcare facilities
                             if show_hospitals:
                                 hospitals = apis['Healthcare'].get_hospitals()
@@ -577,6 +550,33 @@ def main():
                                         if geodesic(coordinates, park_coords).miles <= radius:
                                             park['properties']['type'] = 'Park'
                                             nearby_data['infrastructure'].append(park)
+                            
+                            # Get schools from nearby ZIP codes
+                            # First, find the closest ZIP code to the coordinates
+                            closest_zip = zip_validator.get_closest_zip(coordinates)
+                            if closest_zip:
+                                nearby_zips = zip_validator.get_nearby_zips(closest_zip, radius)
+                                for zip_code in nearby_zips:
+                                    if show_public_schools:
+                                        schools = apis['Education'].get_schools_by_zip(zip_code, 'public')
+                                        if schools and schools.get('success'):
+                                            for school in schools['data'].get('schools', []):
+                                                school['school_type'] = 'public'
+                                                nearby_data['schools'].append(school)
+                                    
+                                    if show_private_schools:
+                                        schools = apis['Education'].get_schools_by_zip(zip_code, 'private')
+                                        if schools and schools.get('success'):
+                                            for school in schools['data'].get('schools', []):
+                                                school['school_type'] = 'private'
+                                                nearby_data['schools'].append(school)
+                                    
+                                    if show_charter_schools:
+                                        schools = apis['Education'].get_schools_by_zip(zip_code, 'charter')
+                                        if schools and schools.get('success'):
+                                            for school in schools['data'].get('schools', []):
+                                                school['school_type'] = 'charter'
+                                                nearby_data['schools'].append(school)
                             
                             # Create analysis tabs
                             tab1, tab2, tab3 = st.tabs([
