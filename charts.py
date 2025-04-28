@@ -74,7 +74,15 @@ def plot_schools_histogram():
         xaxis_title='Number of Schools per ZIP Code',
         yaxis_title='Number of ZIP Codes',
         showlegend=False,
-        yaxis_range=[0, 40]  # Set y-axis range from 0 to 40
+        yaxis_range=[0, 40],  # Set y-axis range from 0 to 40
+        title={
+            'text': 'Schools per ZIP Code',
+            'y': 0.95,  # Adjust title position
+            'x': 0.5,   # Center title
+            'xanchor': 'center',
+            'yanchor': 'top',
+            'font': {'size': 24}  # Make title larger
+        }
     )
     
     # Update text position to be inside the bars
