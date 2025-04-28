@@ -188,10 +188,10 @@ def plot_fire_station_proximity_pie():
     df = df.sort_values('ZIP Codes', ascending=False)  # Changed to descending order
     
     # Create custom color sequence from light red (larger values) to darker red (smaller values)
-    colors = ['#FFE6E6',    # Very light red for largest
-             '#FFCCCC',     # Light red
-             '#FF9999',     # Medium-light red
-             '#FF6666']     # Medium red for smallest
+    colors = ['#FFD9D9',    # Light red for largest (slightly darker than before)
+             '#FFB3B3',     # Medium-light red
+             '#FF8080',     # Medium red
+             '#FF4D4D']     # Darker red for smallest
     
     # Create pie chart
     fig = px.pie(
@@ -216,15 +216,16 @@ def plot_fire_station_proximity_pie():
         legend_title_text='Distance to Nearest Fire Station',
         annotations=[
             dict(
-                text=f'<b>Total ZIPs: {sum(distance_categories.values())}</b>',  # Bold text with HTML tag
+                text=f'<b>Total ZIP:<br>{sum(distance_categories.values())}</b>',  # Two lines with HTML break
                 x=0.5,
                 y=0.5,
                 font=dict(
                     size=14,
-                    color='black',  # Pure black color
-                    family='Arial Black'  # Bolder font family
+                    color='black',
+                    family='Arial Black'
                 ),
-                showarrow=False
+                showarrow=False,
+                align='center'  # Center align the text
             )
         ]
     )
