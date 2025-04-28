@@ -105,7 +105,7 @@ def main():
         st.plotly_chart(plot_zip_park_density_treemap(), use_container_width=True)
     
     # Add bus stop distance heat map below the school distribution bar graph
-    st.plotly_chart(plot_bus_stop_distance_heatmap(), use_container_width=True)
+    st.plotly_chart(plot_bus_stop_distance_heatmap(zip_validator), use_container_width=True)
     
     # Create two columns for controls and main content
     control_col, main_col = st.columns([1, 3])

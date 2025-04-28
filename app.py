@@ -287,18 +287,13 @@ st.markdown("---")
 
 # Import required modules based on current page
 if st.session_state.current_page == 'Dashboard':
-    # Modify dashboard imports to avoid page_config
+    # Import dashboard module
     import dashboard
-    # Remove page config from dashboard.py execution
-    if hasattr(dashboard, 'main'):
-        dashboard.main()
-    else:
-        # Run dashboard code without page config
-        from dashboard import get_apis, get_zip_validator
-        apis = get_apis()
-        zip_validator = get_zip_validator()
-        # Rest of dashboard functionality
-        
+    # Get the zip_validator instance
+    zip_validator = dashboard.get_zip_validator()
+    # Run the dashboard main function
+    dashboard.main()
+    
 elif st.session_state.current_page == 'Map':
     # Modify map imports to avoid page_config
     import map4

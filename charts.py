@@ -318,7 +318,7 @@ def plot_zip_park_density_treemap():
     
     return fig 
 
-@st.cache_data(show_spinner=False)
+@st.cache_data(show_spinner=False, ttl=3600)  # Cache for 1 hour
 def plot_bus_stop_distance_heatmap(zip_validator):
     """
     Creates a heat map showing the average distance to the nearest bus stop for each ZIP code

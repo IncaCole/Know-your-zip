@@ -257,4 +257,28 @@ class ZIPValidator:
         except Exception as e:
             print(f"Error checking point in ZIP {zip_code}: {str(e)}")
         
-        return False 
+        return False
+
+    def get_zip_geojson(self) -> dict:
+        """
+        Get a GeoJSON object containing all ZIP code boundaries.
+        
+        Returns:
+            dict: GeoJSON object with all ZIP code boundaries
+        """
+        features = []
+        for zip_code, data in self.zip_database.items():
+            if 'geometry' in data:
+                feature = {
+                    'type': 'Feature',
+                    'properties': {
+                        'ZIP_Code': zip_code
+                    },
+                    'geometry': data['geometry']
+                }
+                features.append(feature)
+        
+        return {
+            'type': 'FeatureCollection',
+            'features': features
+        } 
