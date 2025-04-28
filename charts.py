@@ -185,13 +185,13 @@ def plot_fire_station_proximity_pie():
     })
     
     # Sort DataFrame by ZIP code count to assign colors based on segment size
-    df = df.sort_values('ZIP Codes', ascending=True)
+    df = df.sort_values('ZIP Codes', ascending=False)  # Changed to descending order
     
-    # Create custom color sequence from dark red (smaller values) to light red (larger values)
-    colors = ['#660000',    # Very dark red for smallest
-             '#990000',     # Dark red
-             '#CC0000',     # Medium red
-             '#FF3333']     # Light red for largest
+    # Create custom color sequence from light red (larger values) to darker red (smaller values)
+    colors = ['#FFE6E6',    # Very light red for largest
+             '#FFCCCC',     # Light red
+             '#FF9999',     # Medium-light red
+             '#FF6666']     # Medium red for smallest
     
     # Create pie chart
     fig = px.pie(
