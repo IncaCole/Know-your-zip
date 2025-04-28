@@ -286,7 +286,7 @@ def plot_zip_park_density_treemap():
         values='Area',
         color='Park_Count',
         color_continuous_scale='Greens',
-        title='ZIP Code Areas and Park Density',
+        title='Park Locations and Density',
         custom_data=['Park_Count']
     )
     
@@ -304,7 +304,7 @@ def plot_zip_park_density_treemap():
     
     fig.update_layout(
         title={
-            'text': 'ZIP Code Areas and Park Density',
+            'text': 'Park Locations and Density',
             'y': 0.95,
             'x': 0.5,
             'xanchor': 'center',
