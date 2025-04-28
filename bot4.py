@@ -349,29 +349,30 @@ def main():
     with col2:
         st.subheader("💬 Chat with AI Assistant")
         st.markdown('<div class="chat-window">', unsafe_allow_html=True)
+        chat_html = '<div class="chat-window">'
         for message in st.session_state.messages:
-            with st.container():
-                if message["role"] == "user":
-                    st.markdown(f"""
-                    <div class="chat-message user">
-                        <div class="content">
-                            <div class="avatar">👤</div>
-                            <div class="message">{message["content"]}</div>
-                        </div>
+            if message["role"] == "user":
+                chat_html += f'''
+                <div class="chat-message user">
+                    <div class="content">
+                        <div class="avatar">👤</div>
+                        <div class="message">{message["content"]}</div>
                     </div>
-                    """, unsafe_allow_html=True)
-                elif message["role"] == "assistant":
-                    st.markdown(f"""
-                    <div class="chat-message bot">
-                        <div class="content">
-                            <div class="avatar">🤖</div>
-                            <div class="message">{message["content"]}</div>
-                        </div>
+                </div>
+                '''
+            elif message["role"] == "assistant":
+                chat_html += f'''
+                <div class="chat-message bot">
+                    <div class="content">
+                        <div class="avatar">🤖</div>
+                        <div class="message">{message["content"]}</div>
                     </div>
-                    """, unsafe_allow_html=True)
-                else:  # system message
-                    st.info(message["content"])
-        st.markdown('</div>', unsafe_allow_html=True)
+                </div>
+                '''
+            else:
+                chat_html += f'<div class="chat-message system">{message["content"]}</div>'
+        chat_html += '</div>'
+        st.markdown(chat_html, unsafe_allow_html=True)
 
         # Create a form for input
         with st.form(key="chat_form", clear_on_submit=True):
