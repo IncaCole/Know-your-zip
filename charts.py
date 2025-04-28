@@ -184,20 +184,29 @@ def plot_fire_station_proximity_pie():
         'ZIP Codes': list(distance_categories.values())
     })
     
+    # Sort DataFrame by ZIP code count to assign colors based on segment size
+    df = df.sort_values('ZIP Codes', ascending=True)
+    
+    # Create custom color sequence from red (smaller values) to yellow (larger values)
+    colors = ['#FF0000',    # Bright red for smallest
+             '#FF4500',     # Red-orange
+             '#FFA500',     # Orange
+             '#FFD700']     # Golden yellow for largest
+    
     # Create pie chart
     fig = px.pie(
         df,
         values='ZIP Codes',
         names='Distance',
-        title='ZIP Code Distribution by Fire Station Proximity',
-        color_discrete_sequence=px.colors.sequential.Reds,  # Use red color scheme for fire stations
+        title='Fire Station Proximity by ZIP Code',
+        color_discrete_sequence=colors,  # Use our custom color sequence
         hole=0.3  # Create a donut chart for better visualization
     )
     
     # Update layout for better appearance
     fig.update_layout(
         title={
-            'text': 'ZIP Code Distribution by Fire Station Proximity',
+            'text': 'Fire Station Proximity by ZIP Code',
             'y': 0.95,
             'x': 0.5,
             'xanchor': 'center',
