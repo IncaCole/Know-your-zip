@@ -319,18 +319,18 @@ def plot_zip_park_density_treemap():
     return fig 
 
 @st.cache_data(show_spinner=False, ttl=3600)  # Cache for 1 hour
-def plot_bus_stop_distance_heatmap(zip_validator):
+def plot_bus_stop_distance_heatmap(_zip_validator):
     """
     Creates a heat map showing the average distance to the nearest bus stop for each ZIP code
     
     Args:
-        zip_validator: An instance of ZIPValidator to use for ZIP code operations
+        _zip_validator: An instance of ZIPValidator to use for ZIP code operations
     """
     # Initialize APIs
     bus_stops_api = BusStopsAPI()
     
     # Get all ZIP codes and bus stops
-    zip_codes = zip_validator.get_all_zip_codes()
+    zip_codes = _zip_validator.get_all_zip_codes()
     bus_stops = bus_stops_api.get_all_stops()
     
     # Initialize data structure
@@ -341,7 +341,7 @@ def plot_bus_stop_distance_heatmap(zip_validator):
     
     # Calculate average distances for each ZIP code
     for zip_code in zip_codes:
-        zip_coords = zip_validator.get_zip_coordinates(zip_code)
+        zip_coords = _zip_validator.get_zip_coordinates(zip_code)
         if not zip_coords:
             continue
             
@@ -364,7 +364,7 @@ def plot_bus_stop_distance_heatmap(zip_validator):
     df = pd.DataFrame(zip_data)
     
     # Get GeoJSON data
-    geojson_data = zip_validator.get_zip_geojson()
+    geojson_data = _zip_validator.get_zip_geojson()
     
     # Create heat map
     fig = px.choropleth(
