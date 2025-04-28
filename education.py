@@ -10,6 +10,7 @@ import pandas as pd
 from typing import Dict, List, Optional, Union, Any
 import logging
 from datetime import datetime
+import time
 from src.utils.response_normalizer import success_response, error_response
 
 # Configure logging
@@ -58,8 +59,9 @@ class EducationAPI:
                 logger.info(f"Attempting to fetch data from {endpoint} (attempt {attempt + 1}/{max_retries})")
                 response = self.session.get(endpoint)
                 response.raise_for_status()
+                data = response.json()
                 logger.info(f"Successfully fetched data from {endpoint}")
-                return response.json()
+                return data
             except requests.exceptions.RequestException as e:
                 logger.warning(f"Failed to fetch data from {endpoint}: {str(e)}")
                 if attempt < max_retries - 1:
@@ -82,49 +84,81 @@ class EducationAPI:
         """
         try:
             schools = []
+            logger.info(f"Searching for {school_type} schools in ZIP code {zip_code}")
             
             if school_type in ['public', 'all']:
                 public_data = self.fetch_data_with_retry(EDUCATION_API_ENDPOINTS['public_schools'])
                 if public_data and 'features' in public_data:
                     for feature in public_data['features']:
-                        properties = feature.get('properties', {})
+                        if 'properties' not in feature:
+                            continue
+                        properties = feature['properties']
                         # Include schools in the target ZIP code and adjacent ones
                         feature_zip = str(properties.get('ZIPCODE', '')).strip()
                         if feature_zip and (feature_zip == str(zip_code) or 
                             # Include schools with similar ZIP codes (first 3 digits match)
                             (len(feature_zip) == 5 and len(str(zip_code)) == 5 and 
                              feature_zip[:3] == str(zip_code)[:3])):
-                            properties['school_type'] = 'public'
-                            schools.append(properties)
+                            school_data = {
+                                'NAME': properties.get('NAME', 'Unknown'),
+                                'ADDRESS': properties.get('ADDRESS', ''),
+                                'ZIPCODE': feature_zip,
+                                'PHONE': properties.get('PHONE', ''),
+                                'school_type': 'public',
+                                'GRDLEVEL': properties.get('GRDLEVEL', '')
+                            }
+                            schools.append(school_data)
+                            logger.info(f"Found public school: {school_data['NAME']} in ZIP {feature_zip}")
             
             if school_type in ['private', 'all']:
                 private_data = self.fetch_data_with_retry(EDUCATION_API_ENDPOINTS['private_schools'])
                 if private_data and 'features' in private_data:
                     for feature in private_data['features']:
-                        properties = feature.get('properties', {})
+                        if 'properties' not in feature:
+                            continue
+                        properties = feature['properties']
                         # Include schools in the target ZIP code and adjacent ones
                         feature_zip = str(properties.get('ZIPCODE', '')).strip()
                         if feature_zip and (feature_zip == str(zip_code) or 
                             # Include schools with similar ZIP codes (first 3 digits match)
                             (len(feature_zip) == 5 and len(str(zip_code)) == 5 and 
                              feature_zip[:3] == str(zip_code)[:3])):
-                            properties['school_type'] = 'private'
-                            schools.append(properties)
+                            school_data = {
+                                'NAME': properties.get('NAME', 'Unknown'),
+                                'ADDRESS': properties.get('ADDRESS', ''),
+                                'ZIPCODE': feature_zip,
+                                'PHONE': properties.get('PHONE', ''),
+                                'school_type': 'private',
+                                'GRDLEVEL': properties.get('GRDLEVEL', '')
+                            }
+                            schools.append(school_data)
+                            logger.info(f"Found private school: {school_data['NAME']} in ZIP {feature_zip}")
             
             if school_type in ['charter', 'all']:
                 charter_data = self.fetch_data_with_retry(EDUCATION_API_ENDPOINTS['charter_schools'])
                 if charter_data and 'features' in charter_data:
                     for feature in charter_data['features']:
-                        properties = feature.get('properties', {})
+                        if 'properties' not in feature:
+                            continue
+                        properties = feature['properties']
                         # Include schools in the target ZIP code and adjacent ones
                         feature_zip = str(properties.get('ZIPCODE', '')).strip()
                         if feature_zip and (feature_zip == str(zip_code) or 
                             # Include schools with similar ZIP codes (first 3 digits match)
                             (len(feature_zip) == 5 and len(str(zip_code)) == 5 and 
                              feature_zip[:3] == str(zip_code)[:3])):
-                            properties['school_type'] = 'charter'
-                            schools.append(properties)
+                            school_data = {
+                                'NAME': properties.get('NAME', 'Unknown'),
+                                'ADDRESS': properties.get('ADDRESS', ''),
+                                'ZIPCODE': feature_zip,
+                                'PHONE': properties.get('PHONE', ''),
+                                'school_type': 'charter',
+                                'GRDLEVEL': properties.get('GRDLEVEL', '')
+                            }
+                            schools.append(school_data)
+                            logger.info(f"Found charter school: {school_data['NAME']} in ZIP {feature_zip}")
             
+            logger.info(f"Found total of {len(schools)} schools for ZIP code {zip_code}")
             return success_response(
                 message=f"Found {len(schools)} schools in and around ZIP code {zip_code}",
                 data={'schools': schools}
