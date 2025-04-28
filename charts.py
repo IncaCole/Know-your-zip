@@ -64,7 +64,8 @@ def plot_schools_histogram():
         title='Distribution of Schools Across Miami-Dade ZIP Codes',
         labels={'Total_Schools': 'Number of Schools', 'count': 'Number of ZIP Codes'},
         color_discrete_sequence=['#1f77b4'],  # Use a nice blue color
-        category_orders={'Total_Schools': sorted(df['Total_Schools'].unique())}  # Sort bins by value
+        category_orders={'Total_Schools': sorted(df['Total_Schools'].unique())},  # Sort bins by value
+        text_auto=True  # Enable automatic text display
     )
     
     # Update layout for better appearance
@@ -76,24 +77,12 @@ def plot_schools_histogram():
         yaxis_range=[0, 40]  # Set y-axis range from 0 to 40
     )
     
-    # Add text labels above each bar
-    for bar in fig.data:
-        y_data = bar.y
-        x_data = bar.x
-        fig.add_traces(
-            px.scatter(
-                x=x_data,
-                y=y_data,
-                text=y_data
-            ).update_traces(
-                mode='text',
-                textposition='top center',
-                showlegend=False,
-                textfont=dict(size=14),
-                hovertemplate=None,
-                hoverinfo='skip'
-            ).data
-        )
+    # Update text position to be inside the bars
+    fig.update_traces(
+        textposition='inside',
+        textfont=dict(size=14, color='white'),  # Make text white and larger
+        insidetextanchor='middle'  # Center text in bars
+    )
     
     return fig
 
