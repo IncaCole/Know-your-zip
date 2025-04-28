@@ -373,21 +373,7 @@ def main():
                             with tab3:
                                 st.subheader("⚠️ Risk Assessment")
                                 
-                                # Debug information
-                                st.write("Data counts:")
-                                st.write({
-                                    "Flood Zones": len(nearby_data['geo_data']['flood_zones']),
-                                    "Emergency Services": len(nearby_data['emergency']),
-                                    "Healthcare Facilities": len(nearby_data['healthcare']),
-                                    "Infrastructure": len(nearby_data['infrastructure'])
-                                })
-                                
-                                # Calculate risk factors with proper normalization
-                                flood_risk = min(len(nearby_data['geo_data']['flood_zones']) * 2, 10)
-                                emergency_risk = max(0, 10 - len(nearby_data['emergency']) * 2)
-                                healthcare_risk = max(0, 10 - len(nearby_data['healthcare']) * 2)
-                                infrastructure_risk = max(0, 10 - len(nearby_data['infrastructure']) * 1.5)
-                                
+                                # Calculate risk factors
                                 risk_data = pd.DataFrame({
                                     'Risk Factor': [
                                         'Flood Zone Coverage',
@@ -396,14 +382,13 @@ def main():
                                         'Infrastructure Access'
                                     ],
                                     'Risk Score': [
-                                        flood_risk,
-                                        emergency_risk,
-                                        healthcare_risk,
-                                        infrastructure_risk
+                                        min(len(nearby_data['geo_data']['flood_zones']) * 2, 10),
+                                        max(0, 10 - len(nearby_data['emergency']) * 3),
+                                        max(0, 10 - len(nearby_data['healthcare']) * 2),
+                                        max(0, 10 - len(nearby_data['infrastructure']) * 1)
                                     ]
                                 })
                                 
-                                # Create the bar chart
                                 fig = px.bar(
                                     risk_data,
                                     x='Risk Factor',
@@ -412,18 +397,9 @@ def main():
                                     color='Risk Factor',
                                     color_discrete_sequence=px.colors.sequential.Reds
                                 )
-                                
-                                # Customize the chart
-                                fig.update_layout(
-                                    yaxis_range=[0, 10],
-                                    yaxis_title="Risk Score (0-10)",
-                                    xaxis_title="Risk Factor",
-                                    showlegend=False
-                                )
-                                
                                 st.plotly_chart(fig, use_container_width=True)
                                 
-                                # Calculate and display overall risk score
+                                # Calculate overall risk score
                                 risk_score = risk_data['Risk Score'].mean()
                                 risk_color = 'green' if risk_score < 4 else 'yellow' if risk_score < 7 else 'red'
                                 st.markdown(f"### Overall Risk Level: <span style='color: {risk_color}'>{risk_score:.1f}/10</span>", 
