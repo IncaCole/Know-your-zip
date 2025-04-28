@@ -312,7 +312,8 @@ def plot_zip_park_density_treemap():
             'font': {'size': 24}
         },
         height=450,
-        margin=dict(l=0, r=0, t=50, b=0)
+        margin=dict(l=0, r=0, t=50, b=0),
+        showlegend=False  # Remove the color scale legend
     )
     
     return fig 
