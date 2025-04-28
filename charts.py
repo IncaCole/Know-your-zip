@@ -317,3 +317,95 @@ def plot_zip_park_density_treemap():
     )
     
     return fig 
+
+@st.cache_data
+def get_schools_by_grade():
+    """
+    Fetches all schools and returns a DataFrame with grade level distribution
+    """
+    education_api = EducationAPI()
+    zip_validator = ZIPValidator()
+    
+    # Get all valid Miami-Dade ZIP codes
+    zip_codes = zip_validator.get_all_zip_codes()
+    
+    # Initialize dictionary to store grade level counts
+    grade_counts = {
+        'Grade_Level': [],
+        'School_Count': [],
+        'School_Type': []
+    }
+    
+    # Fetch schools for each ZIP code
+    for zip_code in zip_codes:
+        # Get schools of each type
+        public_schools = education_api.get_schools_by_zip(zip_code, 'public')
+        private_schools = education_api.get_schools_by_zip(zip_code, 'private')
+        charter_schools = education_api.get_schools_by_zip(zip_code, 'charter')
+        
+        # Process each school type
+        for school_type, schools_data in [
+            ('Public', public_schools),
+            ('Private', private_schools),
+            ('Charter', charter_schools)
+        ]:
+            if schools_data and schools_data.get('success'):
+                for school in schools_data.get('data', {}).get('schools', []):
+                    grade_level = school.get('GRDLEVEL', 'Unknown')
+                    if grade_level != 'Unknown':
+                        grade_counts['Grade_Level'].append(grade_level)
+                        grade_counts['School_Count'].append(1)
+                        grade_counts['School_Type'].append(school_type)
+    
+    return pd.DataFrame(grade_counts)
+
+def plot_schools_by_grade():
+    """
+    Creates and returns an area chart showing the distribution of schools across grade levels
+    """
+    # Get the grade level data
+    df = get_schools_by_grade()
+    
+    # Group by grade level and school type
+    df_grouped = df.groupby(['Grade_Level', 'School_Type'])['School_Count'].sum().reset_index()
+    
+    # Sort grade levels in a logical order
+    grade_order = ['PK', 'K', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12']
+    df_grouped['Grade_Level'] = pd.Categorical(df_grouped['Grade_Level'], categories=grade_order, ordered=True)
+    df_grouped = df_grouped.sort_values('Grade_Level')
+    
+    # Create area chart
+    fig = px.area(
+        df_grouped,
+        x='Grade_Level',
+        y='School_Count',
+        color='School_Type',
+        title='School Distribution by Grade Level',
+        labels={
+            'Grade_Level': 'Grade Level',
+            'School_Count': 'Number of Schools',
+            'School_Type': 'School Type'
+        },
+        color_discrete_map={
+            'Public': '#1f77b4',
+            'Private': '#ff7f0e',
+            'Charter': '#2ca02c'
+        }
+    )
+    
+    # Update layout for better appearance
+    fig.update_layout(
+        xaxis_title='Grade Level',
+        yaxis_title='Number of Schools',
+        showlegend=True,
+        title={
+            'text': 'School Distribution by Grade Level',
+            'y': 0.95,
+            'x': 0.5,
+            'xanchor': 'center',
+            'yanchor': 'top',
+            'font': {'size': 24}
+        }
+    )
+    
+    return fig 

@@ -9,7 +9,7 @@ from src.zip_validator import ZIPValidator
 from geopy.geocoders import Nominatim
 from geopy.distance import geodesic
 from infrastructure import BusStopsAPI, LibrariesAPI, ParksAPI
-from charts import plot_schools_histogram, plot_fire_station_proximity_pie, plot_zip_park_density_treemap
+from charts import plot_schools_histogram, plot_fire_station_proximity_pie, plot_zip_park_density_treemap, plot_schools_by_grade
 
 def categorize_location(lat: float, lon: float) -> str:
     """
@@ -103,6 +103,9 @@ def main():
         
     with col3:
         st.plotly_chart(plot_zip_park_density_treemap(), use_container_width=True)
+    
+    # Add the grade distribution chart below
+    st.plotly_chart(plot_schools_by_grade(), use_container_width=True)
     
     # Create two columns for controls and main content
     control_col, main_col = st.columns([1, 3])
