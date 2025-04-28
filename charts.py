@@ -321,7 +321,8 @@ def plot_zip_park_density_treemap():
 @st.cache_data
 def get_schools_by_grade():
     """
-    Fetches all schools and returns a DataFrame with grade level distribution
+    Fetches all schools and returns a DataFrame with grade level distribution (PK, K, 1-12)
+    Handles grade ranges like 'PK-5', 'K-8', etc.
     """
     education_api = EducationAPI()
     zip_validator = ZIPValidator()
@@ -329,54 +330,66 @@ def get_schools_by_grade():
     # Get all valid Miami-Dade ZIP codes
     zip_codes = zip_validator.get_all_zip_codes()
     
-    # Initialize dictionary to store grade level counts
+    # Define all grade levels
+    all_grades = ['PK', 'K'] + [str(i) for i in range(1, 13)]
     grade_counts = {
         'Grade_Level': [],
         'School_Count': [],
         'School_Type': []
     }
     
+    def parse_grades(grade_str):
+        grade_str = grade_str.upper().replace(' ', '')
+        # Handle common patterns
+        if '-' in grade_str:
+            start, end = grade_str.split('-')
+            # Map PK and K
+            grade_map = {'PK': 0, 'K': 1}
+            def grade_to_num(g):
+                if g in grade_map:
+                    return grade_map[g]
+                try:
+                    return int(g) + 1  # 1-based for PK=0, K=1, 1=2, ...
+                except:
+                    return None
+            s = grade_to_num(start)
+            e = grade_to_num(end)
+            if s is not None and e is not None:
+                grades = []
+                for n in range(s, e+1):
+                    if n == 0:
+                        grades.append('PK')
+                    elif n == 1:
+                        grades.append('K')
+                    else:
+                        grades.append(str(n-1))
+                return grades
+        # Single grade
+        if grade_str in all_grades:
+            return [grade_str]
+        # Sometimes it's a comma-separated list
+        if ',' in grade_str:
+            return [g for g in grade_str.split(',') if g in all_grades]
+        return []
+    
     # Fetch schools for each ZIP code
     for zip_code in zip_codes:
-        # Get schools of each type
-        public_schools = education_api.get_schools_by_zip(zip_code, 'public')
-        private_schools = education_api.get_schools_by_zip(zip_code, 'private')
-        charter_schools = education_api.get_schools_by_zip(zip_code, 'charter')
-        
-        # Process each school type
         for school_type, schools_data in [
-            ('Public', public_schools),
-            ('Private', private_schools),
-            ('Charter', charter_schools)
+            ('Public', education_api.get_schools_by_zip(zip_code, 'public')),
+            ('Private', education_api.get_schools_by_zip(zip_code, 'private')),
+            ('Charter', education_api.get_schools_by_zip(zip_code, 'charter'))
         ]:
             if schools_data and schools_data.get('success'):
                 schools = schools_data.get('data', {}).get('schools', [])
                 for school in schools:
-                    # Get grade level and clean it
-                    grade_level = school.get('GRDLEVEL', 'Unknown')
-                    if grade_level != 'Unknown':
-                        # Clean and standardize grade level
-                        grade_level = grade_level.strip().upper()
-                        
-                        # Handle special cases
-                        if grade_level in ['PK', 'K']:
-                            grade_level = grade_level
-                        elif grade_level.isdigit():
-                            grade_level = str(int(grade_level))  # Remove leading zeros
-                        elif 'ELEMENTARY' in grade_level:
-                            grade_level = 'ELEMENTARY'
-                        elif 'MIDDLE' in grade_level:
-                            grade_level = 'MIDDLE'
-                        elif 'HIGH' in grade_level:
-                            grade_level = 'HIGH'
-                        
-                        grade_counts['Grade_Level'].append(grade_level)
+                    grade_level_str = school.get('GRDLEVEL', '')
+                    grades = parse_grades(grade_level_str)
+                    for grade in grades:
+                        grade_counts['Grade_Level'].append(grade)
                         grade_counts['School_Count'].append(1)
                         grade_counts['School_Type'].append(school_type)
     
-    # Create DataFrame
     df = pd.DataFrame(grade_counts)
-    
     return df
 
 def plot_schools_by_grade():
