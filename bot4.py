@@ -92,6 +92,16 @@ st.markdown("""
     .chat-message .message {
         flex: 1;
     }
+    .chat-window {
+        height: 500px;
+        overflow-y: auto;
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        display: flex;
+        flex-direction: column-reverse; /* Start chat at the bottom */
+    }
 </style>
 """, unsafe_allow_html=True)
 
