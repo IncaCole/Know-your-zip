@@ -63,9 +63,8 @@ def plot_schools_histogram():
         df,
         x='Total_Schools',
         nbins=6,
-        title='Schools per ZIP',
+        title='School Distribution',
         labels={'Total_Schools': 'Number of Schools', 'count': 'Number of ZIPs'},
-        color_discrete_sequence=['#1f77b4'],  # Use a nice blue color
         category_orders={'Total_Schools': sorted(df['Total_Schools'].unique())},  # Sort bins by value
         text_auto=True  # Enable automatic text display
     )
@@ -78,7 +77,7 @@ def plot_schools_histogram():
         showlegend=False,
         yaxis_range=[0, 40],  # Set y-axis range from 0 to 40
         title={
-            'text': 'Schools per ZIP',
+            'text': 'School Distribution',
             'y': 0.95,  # Adjust title position
             'x': 0.5,   # Center title
             'xanchor': 'center',
@@ -198,7 +197,7 @@ def plot_fire_station_proximity_pie():
         df,
         values='ZIP Codes',
         names='Distance',
-        title='Fire Station Proximity by ZIP',
+        title='Fire Station Coverage',
         color_discrete_sequence=colors,  # Use our custom color sequence
         hole=0.3  # Create a donut chart for better visualization
     )
@@ -206,7 +205,7 @@ def plot_fire_station_proximity_pie():
     # Update layout for better appearance
     fig.update_layout(
         title={
-            'text': 'Fire Station Proximity by ZIP',
+            'text': 'Fire Station Coverage',
             'y': 0.95,
             'x': 0.5,
             'xanchor': 'center',
@@ -216,7 +215,7 @@ def plot_fire_station_proximity_pie():
         legend_title_text='Distance to Nearest Fire Station',
         annotations=[
             dict(
-                text=f'<b>Total ZIP:<br>{sum(distance_categories.values())}</b>',  # Two lines with HTML break
+                text=f'<b>Total ZIP:<br>{sum(distance_categories.values())}</b>',
                 x=0.5,
                 y=0.5,
                 font=dict(
@@ -225,7 +224,7 @@ def plot_fire_station_proximity_pie():
                     family='Arial Black'
                 ),
                 showarrow=False,
-                align='center'  # Center align the text
+                align='center'
             )
         ]
     )
