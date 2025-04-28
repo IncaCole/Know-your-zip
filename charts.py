@@ -72,7 +72,8 @@ def plot_schools_histogram():
         bargap=0.1,
         xaxis_title='Number of Schools per ZIP Code',
         yaxis_title='Number of ZIP Codes',
-        showlegend=False
+        showlegend=False,
+        yaxis_range=[0, 40]  # Set y-axis range from 0 to 40
     )
     
     # Add text labels above each bar
