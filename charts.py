@@ -63,8 +63,8 @@ def plot_schools_histogram():
         df,
         x='Total_Schools',
         nbins=6,
-        title='Schools per ZIP Code',
-        labels={'Total_Schools': 'Number of Schools', 'count': 'Number of ZIP Codes'},
+        title='Schools per ZIP',
+        labels={'Total_Schools': 'Number of Schools', 'count': 'Number of ZIPs'},
         color_discrete_sequence=['#1f77b4'],  # Use a nice blue color
         category_orders={'Total_Schools': sorted(df['Total_Schools'].unique())},  # Sort bins by value
         text_auto=True  # Enable automatic text display
@@ -73,12 +73,12 @@ def plot_schools_histogram():
     # Update layout for better appearance
     fig.update_layout(
         bargap=0.1,
-        xaxis_title='Number of Schools per ZIP Code',
-        yaxis_title='Number of ZIP Codes',
+        xaxis_title='Number of Schools per ZIP',
+        yaxis_title='Number of ZIPs',
         showlegend=False,
         yaxis_range=[0, 40],  # Set y-axis range from 0 to 40
         title={
-            'text': 'Schools per ZIP Code',
+            'text': 'Schools per ZIP',
             'y': 0.95,  # Adjust title position
             'x': 0.5,   # Center title
             'xanchor': 'center',
@@ -187,18 +187,18 @@ def plot_fire_station_proximity_pie():
     # Sort DataFrame by ZIP code count to assign colors based on segment size
     df = df.sort_values('ZIP Codes', ascending=True)
     
-    # Create custom color sequence from red (smaller values) to yellow (larger values)
-    colors = ['#FF0000',    # Bright red for smallest
-             '#FF4500',     # Red-orange
-             '#FFA500',     # Orange
-             '#FFD700']     # Golden yellow for largest
+    # Create custom color sequence from dark red (smaller values) to light red (larger values)
+    colors = ['#660000',    # Very dark red for smallest
+             '#990000',     # Dark red
+             '#CC0000',     # Medium red
+             '#FF3333']     # Light red for largest
     
     # Create pie chart
     fig = px.pie(
         df,
         values='ZIP Codes',
         names='Distance',
-        title='Fire Station Proximity by ZIP Code',
+        title='Fire Station Proximity by ZIP',
         color_discrete_sequence=colors,  # Use our custom color sequence
         hole=0.3  # Create a donut chart for better visualization
     )
@@ -206,7 +206,7 @@ def plot_fire_station_proximity_pie():
     # Update layout for better appearance
     fig.update_layout(
         title={
-            'text': 'Fire Station Proximity by ZIP Code',
+            'text': 'Fire Station Proximity by ZIP',
             'y': 0.95,
             'x': 0.5,
             'xanchor': 'center',
@@ -216,10 +216,14 @@ def plot_fire_station_proximity_pie():
         legend_title_text='Distance to Nearest Fire Station',
         annotations=[
             dict(
-                text=f'Total ZIP Codes: {sum(distance_categories.values())}',
+                text=f'<b>Total ZIPs: {sum(distance_categories.values())}</b>',  # Bold text with HTML tag
                 x=0.5,
                 y=0.5,
-                font_size=12,
+                font=dict(
+                    size=14,
+                    color='black',  # Pure black color
+                    family='Arial Black'  # Bolder font family
+                ),
                 showarrow=False
             )
         ]
