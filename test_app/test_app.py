@@ -2,10 +2,11 @@ import streamlit as st
 import sys
 import os
 
-# Add the current directory to the Python path
+# Add the current directory and parent directory to the Python path
 current_dir = os.path.dirname(os.path.abspath(__file__))
 root_dir = os.path.dirname(current_dir)
 sys.path.append(current_dir)
+sys.path.append(root_dir)  # Add parent directory to Python path
 
 # Set page config - MUST BE THE FIRST STREAMLIT COMMAND
 st.set_page_config(
